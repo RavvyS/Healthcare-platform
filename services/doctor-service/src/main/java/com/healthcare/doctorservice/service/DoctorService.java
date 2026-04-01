@@ -1,7 +1,10 @@
 package com.healthcare.doctorservice.service;
 
-import com.healthcare.doctorservice.model.Doctor;
+import com.healthcare.doctorservice.model.*;
+import com.healthcare.doctorservice.repository.AppointmentRepository;
+import com.healthcare.doctorservice.repository.AvailabilityRepository;
 import com.healthcare.doctorservice.repository.DoctorRepository;
+import com.healthcare.doctorservice.repository.PrescriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +16,19 @@ import java.util.Optional;
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
+    private final AvailabilityRepository availabilityRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     @Autowired
-    public DoctorService(DoctorRepository doctorRepository) {
+    public DoctorService(DoctorRepository doctorRepository, 
+                         AvailabilityRepository availabilityRepository,
+                         AppointmentRepository appointmentRepository,
+                         PrescriptionRepository prescriptionRepository) {
         this.doctorRepository = doctorRepository;
+        this.availabilityRepository = availabilityRepository;
+        this.appointmentRepository = appointmentRepository;
+        this.prescriptionRepository = prescriptionRepository;
     }
 
     public Doctor saveDoctor(Doctor doctor) {
@@ -49,6 +61,50 @@ public class DoctorService {
     }
 
     public void deleteDoctor(Long id) {
+        // Fix: Ensure id is NOT null
         doctorRepository.deleteById(Objects.requireNonNull(id, "ID is required"));
+    }
+
+    // --- Availability Management ---
+
+    public Availability addAvailability(Long doctorId, Availability availability) {
+        Doctor doctor = doctorRepository.findById(Objects.requireNonNull(doctorId, "ID is required"))
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        availability.setDoctor(doctor);
+        return availabilityRepository.save(availability);
+    }
+
+    public List<Availability> getAvailabilityByDoctorId(Long doctorId) {
+        return availabilityRepository.findByDoctorId(Objects.requireNonNull(doctorId, "ID is required"));
+    }
+
+    public void removeAvailability(Long availabilityId) {
+        availabilityRepository.deleteById(Objects.requireNonNull(availabilityId, "ID is required"));
+    }
+
+    // --- Appointment Management ---
+
+    public List<Appointment> getAppointmentsForDoctor(Long doctorId) {
+        return appointmentRepository.findByDoctorId(Objects.requireNonNull(doctorId, "ID is required"));
+    }
+
+    public Appointment updateAppointmentStatus(Long appointmentId, AppointmentStatus status) {
+        Appointment appointment = appointmentRepository.findById(Objects.requireNonNull(appointmentId, "ID is required"))
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        appointment.setStatus(status);
+        return appointmentRepository.save(appointment);
+    }
+
+    // --- Prescription Issuance ---
+
+    public Prescription issuePrescription(Long appointmentId, Prescription prescription) {
+        Appointment appointment = appointmentRepository.findById(Objects.requireNonNull(appointmentId, "ID is required"))
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        
+        prescription.setAppointmentId(appointmentId);
+        prescription.setDoctorId(appointment.getDoctorId());
+        prescription.setPatientId(appointment.getPatientId());
+        
+        return prescriptionRepository.save(prescription);
     }
 }

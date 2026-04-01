@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "doctors")
 @Data
@@ -25,5 +28,8 @@ public class Doctor {
     private String email;
 
     @Column(columnDefinition = "TEXT")
-    private String availability;
+    private String availability; // Legacy string field, keeping for compatibility
+
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Availability> availabilitySlots = new ArrayList<>();
 }
