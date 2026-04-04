@@ -30,3 +30,22 @@ services:
     depends_on:
       healthcare-db:
         condition: service_healthy
+
+  payment-service:
+    build:
+      context: ../services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - PAYHERE_MERCHANT_ID=1232121
+      - PAYHERE_MERCHANT_SECRET=MTM2ODU5NDI3NjE0MjUxMzU0NDg1MDk1OTEyNDgzOTcyMzA3ODQw
+
+  telemedicine-service:
+    build:
+      context: ../services/telemedicine-service
+      dockerfile: Dockerfile
+    container_name: telemedicine-service
+    ports:
+      - "8085:8085"

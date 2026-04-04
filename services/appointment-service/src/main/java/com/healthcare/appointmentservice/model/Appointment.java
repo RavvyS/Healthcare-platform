@@ -31,6 +31,10 @@ public class Appointment {
 
     private LocalDateTime appointmentDate;
     private String slotTime; // e.g., "10:00 AM - 10:30 AM"
+    
+    private String consultationType; // "ONLINE" or "PHYSICAL"
+    private Double fee;
+    private String orderId;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;

@@ -1,6 +1,7 @@
 package com.healthcare.appointmentservice.controller;
 
 import com.healthcare.appointmentservice.dto.AppointmentRequest;
+import com.healthcare.appointmentservice.dto.AppointmentInitResponse;
 import com.healthcare.appointmentservice.model.Appointment;
 import com.healthcare.appointmentservice.model.AppointmentStatus;
 import com.healthcare.appointmentservice.service.AppointmentService;
@@ -29,9 +30,15 @@ public class AppointmentController {
 
     private final AppointmentService service;
 
-    @PostMapping("/book")
-    public ResponseEntity<Appointment> bookAppointment(@RequestBody AppointmentRequest request) {
-        return ResponseEntity.ok(service.bookAppointment(request));
+    @PostMapping("/init-payment")
+    public ResponseEntity<AppointmentInitResponse> initPayment(@RequestBody AppointmentRequest request) {
+        return ResponseEntity.ok(service.initPayment(request));
+    }
+
+    @PostMapping("/{id}/finalize-payment")
+    public ResponseEntity<Void> finalizePayment(@PathVariable Long id) {
+        service.finalizePayment(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")

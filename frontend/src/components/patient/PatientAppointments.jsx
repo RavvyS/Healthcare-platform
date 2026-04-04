@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { FiCalendar, FiClock, FiVideo, FiMapPin, FiX, FiInfo, FiInbox } from 'react-icons/fi';
 import { getPatientAppointments, cancelAppointment } from '../../api/appointmentApi';
-import { StatusBadge, Loading, EmptyState } from '../common/UI';
+import { StatusBadge, Loading, EmptyState, ConsultationBadge } from '../common/UI';
 import { MOCK_DOCTORS } from '../../data/mockData';
 
 export default function PatientAppointments({ patientId, refreshTrigger, onSuccess }) {
@@ -12,7 +13,6 @@ export default function PatientAppointments({ patientId, refreshTrigger, onSucce
       setLoading(true);
       try {
         const data = await getPatientAppointments(patientId);
-        // Sort by id descending for latest first
         data.sort((a, b) => b.id - a.id);
         setAppointments(data);
       } catch (err) {
@@ -22,7 +22,8 @@ export default function PatientAppointments({ patientId, refreshTrigger, onSucce
       }
     };
     fetchAppointments();
-  }, [patientId, refreshTrigger, onSuccess]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId, refreshTrigger]);
 
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
@@ -35,71 +36,139 @@ export default function PatientAppointments({ patientId, refreshTrigger, onSucce
     }
   };
 
-  const activeAppointments = appointments.filter(a => !['COMPLETED', 'CANCELLED', 'REJECTED'].includes(a.status));
+  const activeAppointments = appointments.filter(a => !['COMPLETED', 'CANCELLED', 'REJECTED', 'UNPAID'].includes(a.status));
   const pastAppointments = appointments.filter(a => ['COMPLETED', 'CANCELLED', 'REJECTED'].includes(a.status));
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading text="Retrieving your medical schedule..." />;
 
   return (
-    <div>
+    <div className="section-gap">
+      {/* ── Active Appointments ── */}
       <div className="card">
-        <div className="card-title">🩺 Upcoming Appointments</div>
-        {activeAppointments.length === 0 ? (
-          <EmptyState icon="📅" title="No upcoming appointments" subtitle="You're all caught up." />
-        ) : (
-          <div className="appointment-list">
-            {activeAppointments.map(app => {
-              const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
-              return (
-                <div key={app.id} className="appointment-item">
-                  <div className="appointment-item-left">
-                    <div className="appointment-avatar">D</div>
-                    <div className="appointment-info">
-                      <h4>{doctor ? doctor.name : `Doctor #${app.doctorId}`}</h4>
-                      <p>{new Date(app.appointmentDate).toDateString()} at {app.slotTime}</p>
-                      {app.reason && <div className="appointment-meta">Reason: {app.reason}</div>}
+        <div className="card-header">
+          <div className="card-header-left">
+            <div className="card-header-icon blue">
+              <FiCalendar />
+            </div>
+            <div>
+              <h3>Upcoming Appointments</h3>
+              <p>Your scheduled consultations and visits</p>
+            </div>
+          </div>
+        </div>
+        <div className="card-body">
+          {activeAppointments.length === 0 ? (
+            <EmptyState 
+              icon={<FiCalendar />} 
+              title="No upcoming appointments" 
+              subtitle="Your scheduled medical visits will appear here once booked." 
+            />
+          ) : (
+            <div className="appointment-list">
+              {activeAppointments.map(app => {
+                const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
+                return (
+                  <div key={app.id} className="appt-item">
+                    <div className="appt-item-left">
+                      <div className="appt-avatar doctor">
+                        {doctor ? doctor.name[4] : 'D'}
+                      </div>
+                      <div className="appt-info">
+                        <h4>{doctor ? doctor.name : `Doctor #${app.doctorId}`}</h4>
+                        <div className="appt-info-meta">
+                          <span className="appt-meta-chip">
+                            <FiCalendar /> {new Date(app.appointmentDate).toDateString()}
+                          </span>
+                          <span className="appt-meta-chip">
+                            <FiClock /> {app.slotTime}
+                          </span>
+                          <ConsultationBadge type={app.consultationType} />
+                        </div>
+                        {app.reason && (
+                          <div className="appt-meta-chip" style={{ marginTop: '4px' }}>
+                            <FiInfo /> {app.reason}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="appt-item-right">
+                      <StatusBadge status={app.status} />
+                      
+                      {app.status === 'PENDING' && (
+                        <button
+                          onClick={() => handleCancel(app.id)}
+                          className="btn btn-sm btn-danger"
+                        >
+                          <FiX /> Cancel
+                        </button>
+                      )}
+                      
+                      {app.status === 'CONFIRMED' && app.consultationType === 'ONLINE' && (
+                        <button
+                          onClick={() => window.open(`/consultation.html?id=${app.id}`, '_blank')}
+                          className="btn btn-sm btn-primary"
+                        >
+                          <FiVideo /> Join Consultation
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="appointment-item-right">
-                    <StatusBadge status={app.status} />
-                    {app.status === 'PENDING' && (
-                      <button className="btn btn-sm btn-ghost" onClick={() => handleCancel(app.id)} style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* ── Past Appointments ── */}
       <div className="card">
-        <div className="card-title">⌛ History</div>
-        {pastAppointments.length === 0 ? (
-          <EmptyState icon="📂" title="No history" subtitle="Your past appointments will appear here." />
-        ) : (
-          <div className="appointment-list">
-            {pastAppointments.map(app => {
-              const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
-              return (
-                <div key={app.id} className="appointment-item" style={{ opacity: 0.7 }}>
-                  <div className="appointment-item-left">
-                    <div className="appointment-avatar" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>D</div>
-                    <div className="appointment-info">
-                      <h4>{doctor ? doctor.name : `Doctor #${app.doctorId}`}</h4>
-                      <p>{new Date(app.appointmentDate).toDateString()} at {app.slotTime}</p>
+        <div className="card-header">
+          <div className="card-header-left">
+            <div className="card-header-icon green">
+              <FiInbox />
+            </div>
+            <div>
+              <h3>Appointment History</h3>
+              <p>Completed and past records</p>
+            </div>
+          </div>
+        </div>
+        <div className="card-body">
+          {pastAppointments.length === 0 ? (
+            <EmptyState 
+              icon={<FiInbox />} 
+              title="No history yet" 
+              subtitle="Records of your visits will be kept here for your convenience." 
+            />
+          ) : (
+            <div className="appointment-list">
+              {pastAppointments.map(app => {
+                const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
+                return (
+                  <div key={app.id} className="appt-item" style={{ opacity: 0.8 }}>
+                    <div className="appt-item-left">
+                      <div className="appt-avatar doctor" style={{ filter: 'grayscale(0.5)' }}>
+                        {doctor ? doctor.name[4] : 'D'}
+                      </div>
+                      <div className="appt-info">
+                        <h4>{doctor ? doctor.name : `Doctor #${app.doctorId}`}</h4>
+                        <div className="appt-info-meta">
+                          <span className="appt-meta-chip">
+                             <FiCalendar /> {new Date(app.appointmentDate).toDateString()}
+                          </span>
+                          <ConsultationBadge type={app.consultationType} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="appt-item-right">
+                      <StatusBadge status={app.status} />
                     </div>
                   </div>
-                  <div className="appointment-item-right">
-                    <StatusBadge status={app.status} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

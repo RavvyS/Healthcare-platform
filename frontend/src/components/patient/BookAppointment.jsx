@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { bookAppointment, getBookedSlots } from '../../api/appointmentApi';
+import { 
+  FiCalendar, FiClock, FiUser, FiActivity, FiArrowRight, 
+  FiHash, FiFileText, FiVideo, FiMapPin, FiCheckCircle 
+} from 'react-icons/fi';
+import { RiMoneyEuroBoxLine } from 'react-icons/ri';
+import { initPayment, finalizePayment, getBookedSlots } from '../../api/appointmentApi';
 import { MOCK_DOCTORS, TIME_SLOTS } from '../../data/mockData';
 
 export default function BookAppointment({ patientId, onSuccess }) {
   const [form, setForm] = useState({
-    doctorId: '', appointmentDate: '', slotTime: '', reason: '',
+    doctorId: '', appointmentDate: '', slotTime: '', reason: '', consultationType: 'ONLINE'
   });
   const [loading, setLoading] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
@@ -26,22 +31,81 @@ export default function BookAppointment({ patientId, onSuccess }) {
     if (!form.doctorId || !form.appointmentDate || !form.slotTime) return;
     setLoading(true);
     try {
-      // Combine date + slot into ISO datetime
       const dateTime = new Date(form.appointmentDate + 'T' + form.slotTime.split(' ')[0]).toISOString();
-      await bookAppointment({
+      const fee = selectedDoctor ? selectedDoctor.fee : 1500;
+      
+      const initData = await initPayment({
         patientId,
         doctorId: Number(form.doctorId),
         appointmentDate: dateTime,
         slotTime: form.slotTime,
         reason: form.reason,
+        consultationType: form.consultationType,
+        fee: fee
       });
-      setForm({ doctorId: '', appointmentDate: '', slotTime: '', reason: '' });
-      onSuccess('Appointment booked successfully! Status: PENDING');
+
+      // Fetch secure hash from isolated payment-service
+      const hashRes = await fetch('http://localhost:8084/api/payments/hash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: initData.orderId,
+          amount: fee,
+          currency: 'LKR'
+        })
+      });
+      if (!hashRes.ok) throw new Error("Failed to contact payment service for secure token");
+      const hashData = await hashRes.json();
+
+      const payment = {
+        "sandbox": true,
+        "merchant_id": "1232121", 
+        "return_url": "http://localhost:5173",
+        "cancel_url": "http://localhost:5173",
+        "notify_url": "http://localhost:8083/api/appointments/payment-webhook",
+        "order_id": initData.orderId,
+        "items": `Consultation with ${selectedDoctor.name}`,
+        "amount": fee.toFixed(2),
+        "currency": "LKR",
+        "hash": hashData.hash, 
+        "first_name": "Patient",
+        "last_name": "X",
+        "email": "test@ravvycare.com",
+        "phone": "0771234567",
+        "address": "No 1, Galle Road",
+        "city": "Colombo",
+        "country": "Sri Lanka"
+      };
+
+      window.payhere.onCompleted = async function onCompleted(orderId) {
+        setLoading(true);
+        try {
+            await finalizePayment(initData.appointmentId);
+            setForm({ doctorId: '', appointmentDate: '', slotTime: '', reason: '', consultationType: 'ONLINE' });
+            onSuccess('Payment successful! Booking confirmed.', 'success');
+        } catch (err) {
+            onSuccess('Payment received, but error syncing status.', 'error');
+        } finally {
+            setLoading(false);
+        }
+      };
+
+      window.payhere.onDismissed = function onDismissed() {
+        setLoading(false);
+        onSuccess('Payment cancelled.', 'warning');
+      };
+
+      window.payhere.onError = function onError(error) {
+        setLoading(false);
+        onSuccess('Payment error: ' + error, 'error');
+      };
+
+      window.payhere.startPayment(payment);
+
     } catch (err) {
-      const msg = err.message || 'Failed to book appointment.';
-      onSuccess(msg.includes('already booked') ? 'This slot was just booked by someone else!' : 'Failed to book appointment', 'error');
-    } finally {
       setLoading(false);
+      const msg = err.message || 'Failed to initialize payment.';
+      onSuccess(msg.includes('already booked') ? 'This slot was just booked by someone else!' : 'Failed to initialize payment', 'error');
     }
   };
 
@@ -49,84 +113,104 @@ export default function BookAppointment({ patientId, onSuccess }) {
 
   return (
     <div className="card">
-      <div className="card-title">📅 Book a New Appointment</div>
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-grid">
-          {/* Doctor Select */}
-          <div className="form-group">
-            <label>Select Doctor</label>
-            <select name="doctorId" value={form.doctorId} onChange={handleChange} required>
-              <option value="">-- Choose a Doctor --</option>
-              {MOCK_DOCTORS.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.name} — {d.specialization}
-                </option>
-              ))}
-            </select>
+      <div className="card-header">
+        <div className="card-header-left">
+          <div className="card-header-icon blue">
+            <FiCalendar />
           </div>
-
-          {/* Date */}
-          <div className="form-group">
-            <label>Appointment Date</label>
-            <input type="date" name="appointmentDate" value={form.appointmentDate}
-              min={today} onChange={handleChange} required />
+          <div>
+            <h3>Schedule a Consultation</h3>
+            <p>Select your specialist and preferred time</p>
           </div>
+        </div>
+      </div>
 
-          {/* Time Slot */}
-          <div className="form-group">
-            <label>Time Slot</label>
-            <select name="slotTime" value={form.slotTime} onChange={handleChange} required disabled={!form.appointmentDate || !form.doctorId}>
-              <option value="">-- Choose a Time Slot --</option>
-              {TIME_SLOTS.map(s => {
-                const isBooked = bookedSlots.includes(s);
-                return (
-                  <option key={s} value={s} disabled={isBooked}>
-                    {s} {isBooked ? '(Booked)' : ''}
+      <div className="card-body">
+        <form onSubmit={handleSubmit}>
+          <div className="form-grid">
+            {/* Doctor Select */}
+            <div className="form-group">
+              <label className="form-label"><FiUser /> Select Doctor</label>
+              <select name="doctorId" value={form.doctorId} onChange={handleChange} required>
+                <option value="">-- Choose a Doctor --</option>
+                {MOCK_DOCTORS.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} — {d.specialization}
                   </option>
-                );
-              })}
-            </select>
+                ))}
+              </select>
+            </div>
+
+            {/* Date */}
+            <div className="form-group">
+              <label className="form-label"><FiCalendar /> Preferred Date</label>
+              <input type="date" name="appointmentDate" value={form.appointmentDate}
+                min={today} onChange={handleChange} required />
+            </div>
+
+            {/* Time Slot */}
+            <div className="form-group">
+              <label className="form-label"><FiClock /> Available Slots</label>
+              <select name="slotTime" value={form.slotTime} onChange={handleChange} required disabled={!form.appointmentDate || !form.doctorId}>
+                <option value="">-- Choose a Time Slot --</option>
+                {TIME_SLOTS.map(s => {
+                  const isBooked = bookedSlots.includes(s);
+                  return (
+                    <option key={s} value={s} disabled={isBooked}>
+                      {s} {isBooked ? '(Booked)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Consultation Type */}
+            <div className="form-group">
+              <label className="form-label"><FiActivity /> Visit Type</label>
+              <select name="consultationType" value={form.consultationType} onChange={handleChange} required>
+                <option value="ONLINE">🎥 Online Video Call</option>
+                <option value="PHYSICAL">🏨 Physical Visit</option>
+              </select>
+            </div>
           </div>
 
-          {/* Fee Preview */}
-          <div className="form-group">
-            <label>Consultation Fee</label>
-            <input
-              readOnly
-              value={selectedDoctor ? `Rs. ${selectedDoctor.fee.toLocaleString()}` : 'Select a doctor'}
-              style={{ cursor: 'default', color: selectedDoctor ? '#10b981' : undefined }}
-            />
+          {/* Reason */}
+          <div className="form-group" style={{ marginTop: 20 }}>
+            <label className="form-label"><FiFileText /> Symptoms / Reason for Visit</label>
+            <textarea name="reason" value={form.reason} onChange={handleChange}
+              placeholder="Briefly describe your medical concerns..." />
           </div>
-        </div>
 
-        {/* Reason */}
-        <div className="form-group" style={{ marginTop: 16 }}>
-          <label>Reason / Symptoms</label>
-          <textarea name="reason" value={form.reason} onChange={handleChange}
-            placeholder="Describe your symptoms or reason for visit..." />
-        </div>
+          {/* Doctor Info Card */}
+          {selectedDoctor && (
+            <div className="doctor-preview">
+              <div className="doctor-preview-avatar">
+                {selectedDoctor.name[4]}
+              </div>
+              <div className="doctor-preview-info">
+                <h4>{selectedDoctor.name}</h4>
+                <p>
+                  Specialization: {selectedDoctor.specialization} · 
+                  {form.consultationType === 'ONLINE' ? <><FiVideo /> Online</> : <><FiMapPin /> Clinic</>}
+                </p>
+              </div>
+              <div className="fee-chip">
+                 LKR {selectedDoctor.fee.toLocaleString()}
+              </div>
+            </div>
+          )}
 
-        {selectedDoctor && (
-          <div style={{
-            marginTop: 16, padding: '12px 16px',
-            background: 'rgba(59,130,246,0.08)', borderRadius: 8,
-            border: '1px solid rgba(59,130,246,0.2)',
-            fontSize: '0.85rem', color: '#94a3b8'
-          }}>
-            🩺 <strong style={{ color: '#f1f5f9' }}>{selectedDoctor.name}</strong> ·{' '}
-            {selectedDoctor.specialization} · Fee: <strong style={{ color: '#10b981' }}>
-              Rs. {selectedDoctor.fee.toLocaleString()}
-            </strong>
+          <div style={{ marginTop: 24 }}>
+            <button className="btn btn-primary btn-lg btn-full shadow-colored" type="submit" disabled={loading}>
+              {loading ? (
+                <><div className="spinner" style={{ width: 14, height: 14, borderTopColor: 'white' }} /> Initializing Secure Payment...</>
+              ) : (
+                <><FiCheckCircle /> Confirm & Proceed to Payment <FiArrowRight /></>
+              )}
+            </button>
           </div>
-        )}
-
-        <div style={{ marginTop: 20 }}>
-          <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? <><div className="spinner" style={{ width: 14, height: 14 }} /> Booking...</> : '📋 Confirm Booking'}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
