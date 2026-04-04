@@ -1,0 +1,46 @@
+const BASE_URL = 'http://localhost:8083/api/appointments';
+
+export const bookAppointment = async (data) => {
+  const res = await fetch(`${BASE_URL}/book`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Failed to book appointment');
+  }
+  return res.json();
+};
+
+export const getBookedSlots = async (doctorId, date) => {
+  if (!doctorId || !date) return [];
+  const res = await fetch(`${BASE_URL}/doctor/${doctorId}/booked-slots?date=${date}`);
+  if (!res.ok) return [];
+  return res.json();
+};
+
+export const getPatientAppointments = async (patientId) => {
+  const res = await fetch(`${BASE_URL}/patient/${patientId}`);
+  if (!res.ok) throw new Error('Failed to fetch appointments');
+  return res.json();
+};
+
+export const getDoctorAppointments = async (doctorId) => {
+  const res = await fetch(`${BASE_URL}/doctor/${doctorId}`);
+  if (!res.ok) throw new Error('Failed to fetch appointments');
+  return res.json();
+};
+
+export const updateAppointmentStatus = async (id, status) => {
+  const res = await fetch(`${BASE_URL}/${id}/status?status=${status}`, {
+    method: 'PATCH',
+  });
+  if (!res.ok) throw new Error('Failed to update status');
+  return res.json();
+};
+
+export const cancelAppointment = async (id) => {
+  const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to cancel appointment');
+};

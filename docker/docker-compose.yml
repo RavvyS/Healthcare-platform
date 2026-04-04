@@ -14,3 +14,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  appointment-service:
+    build:
+      context: ../services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/appointment_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      healthcare-db:
+        condition: service_healthy
