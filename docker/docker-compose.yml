@@ -14,3 +14,38 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  appointment-service:
+    build:
+      context: ../services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/appointment_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      healthcare-db:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ../services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - PAYHERE_MERCHANT_ID=1232121
+      - PAYHERE_MERCHANT_SECRET=MTM2ODU5NDI3NjE0MjUxMzU0NDg1MDk1OTEyNDgzOTcyMzA3ODQw
+
+  telemedicine-service:
+    build:
+      context: ../services/telemedicine-service
+      dockerfile: Dockerfile
+    container_name: telemedicine-service
+    ports:
+      - "8085:8085"

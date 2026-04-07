@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediCare — Secure Video Consultation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-header: #1e293b;
+      --accent-gradient: linear-gradient(135deg, #0284c7, #0d9488);
+      --accent-primary: #38bdf8;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Inter', system-ui, sans-serif; 
+      background: var(--bg-primary); 
+      color: var(--text-white); 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .header {
+      background: var(--bg-header);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: var(--accent-gradient);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 0 15px rgba(2, 132, 199, 0.3);
+    }
+
+    .brand h1 { 
+      font-size: 1.15rem; 
+      font-weight: 800; 
+      letter-spacing: -0.5px;
+    }
+
+    .brand h1 span {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .leave-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1.5px solid rgba(239, 68, 68, 0.3);
+      padding: 8px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .leave-btn:hover { 
+      background: var(--danger); 
+      color: white;
+      border-color: var(--danger);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 20px;
+      background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    }
+
+    .spinner {
+      width: 54px; height: 54px;
+      border: 4px solid rgba(255, 255, 255, 0.05);
+      border-top: 4px solid var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading p {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    #frame-container { flex: 1; display: none; background: #000; }
+    #frame-container iframe { width: 100%; height: 100%; border: none; }
+
+    #error-view {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .error-icon {
+      font-size: 3.5rem;
+      color: var(--danger);
+      margin-bottom: 8px;
+      opacity: 0.8;
+    }
+
+    #error-view h2 { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    #error-view p { font-size: 1rem; color: var(--text-muted); max-width: 400px; line-height: 1.6; }
+
+    .err-btn {
+      background: var(--accent-gradient);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.2);
+    }
+    .err-btn:hover { transform: translateY(-2px); opacity: 0.95; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.3); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">⚕️</div>
+    <div class="brand-text">
+      <h1>Medi<span>Care</span></h1>
+    </div>
+  </div>
+  <button class="leave-btn" onclick="window.close()">✕ Leave Session</button>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Authenticating secure consultation channel...</p>
+</div>
+
+<div id="error-view">
+  <div class="error-icon">⚠️</div>
+  <h2 id="error-title">Connection Failed</h2>
+  <p id="error-msg">The secure consultation room could not be initialized at this time.</p>
+  <button class="err-btn" onclick="window.close()">Return to Dashboard</button>
+</div>
+
+<div id="frame-container">
+  <iframe
+    id="jitsi-frame"
+    allow="camera; microphone; fullscreen; display-capture; autoplay"
+    allowfullscreen
+  ></iframe>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const appointmentId = params.get('id');
+
+  if (!appointmentId) {
+    showError('Missing Authorization', 'No appointment ID was provided for this session.');
+  } else {
+    fetch('http://localhost:8085/api/telemedicine/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointmentId: parseInt(appointmentId) })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Telemedicine Service Offline');
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById('loading').style.display = 'none';
+      const container = document.getElementById('frame-container');
+      container.style.display = 'block';
+      document.getElementById('jitsi-frame').src = data.jitsiUrl;
+      // Update browser title
+      document.title = `MediCare Session — #${appointmentId}`;
+    })
+    .catch(err => {
+      showError('Service Unavailable', 'The MediCare Telemedicine Service is currently unreachable. Please contact support or try again later.');
+    });
+  }
+
+  function showError(title, msg) {
+    document.getElementById('loading').style.display = 'none';
+    const errView = document.getElementById('error-view');
+    errView.style.display = 'flex';
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-msg').textContent = msg;
+  }
+</script>
+</body>
+</html>
