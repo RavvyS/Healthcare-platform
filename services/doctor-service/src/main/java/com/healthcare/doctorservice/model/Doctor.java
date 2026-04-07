@@ -27,6 +27,12 @@ public class Doctor {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private String hospital;
+
+    private Double consultationFee;
+
+    private Boolean verified = Boolean.FALSE;
+
     @Column(columnDefinition = "TEXT")
     private String availability; // Legacy string field, keeping for compatibility
 

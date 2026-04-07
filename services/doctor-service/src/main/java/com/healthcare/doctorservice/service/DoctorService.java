@@ -43,6 +43,13 @@ public class DoctorService {
         return doctorRepository.findAll();
     }
 
+    public List<Doctor> searchDoctors(String specialization) {
+        if (specialization == null || specialization.isBlank()) {
+            return doctorRepository.findAll();
+        }
+        return doctorRepository.findBySpecializationContainingIgnoreCase(specialization);
+    }
+
     public Optional<Doctor> getDoctorById(Long id) {
         //ensure Id is not null
         return doctorRepository.findById(Objects.requireNonNull(id, "ID is required"));
@@ -55,6 +62,9 @@ public class DoctorService {
         doctor.setName(doctorDetails.getName());
         doctor.setSpecialization(doctorDetails.getSpecialization());
         doctor.setEmail(doctorDetails.getEmail());
+        doctor.setHospital(doctorDetails.getHospital());
+        doctor.setConsultationFee(doctorDetails.getConsultationFee());
+        doctor.setVerified(doctorDetails.getVerified());
         doctor.setAvailability(doctorDetails.getAvailability());
         
         return doctorRepository.save(doctor);
@@ -106,5 +116,16 @@ public class DoctorService {
         prescription.setPatientId(appointment.getPatientId());
         
         return prescriptionRepository.save(prescription);
+    }
+
+    public Doctor updateVerificationStatus(Long doctorId, Boolean verified) {
+        Doctor doctor = doctorRepository.findById(Objects.requireNonNull(doctorId, "ID is required"))
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        doctor.setVerified(Boolean.TRUE.equals(verified));
+        return doctorRepository.save(doctor);
+    }
+
+    public List<Prescription> getPrescriptionsForPatient(Long patientId) {
+        return prescriptionRepository.findByPatientId(Objects.requireNonNull(patientId, "ID is required"));
     }
 }

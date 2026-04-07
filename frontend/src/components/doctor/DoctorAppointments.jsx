@@ -5,6 +5,7 @@ import {
 } from 'react-icons/fi';
 import { RiHospitalLine } from 'react-icons/ri';
 import { getDoctorAppointments, updateAppointmentStatus } from '../../api/appointmentApi';
+import { sendNotification } from '../../api/notificationApi';
 import { StatusBadge, Loading, EmptyState, ConsultationBadge } from '../common/UI';
 
 export default function DoctorAppointments({ doctorId, onSuccess }) {
@@ -33,6 +34,16 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
   const handleUpdateStatus = async (id, status) => {
     try {
       await updateAppointmentStatus(id, status);
+      const appointment = appointments.find((item) => item.id === id);
+      if (appointment) {
+        await sendNotification({
+          channel: 'EMAIL',
+          recipientRole: 'PATIENT',
+          recipientId: appointment.patientId,
+          subject: 'Appointment status updated',
+          message: `Your appointment #${id} is now marked as ${status}.`,
+        });
+      }
       onSuccess(`Appointment marked as ${status}`, 'success');
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     } catch {
@@ -236,5 +247,4 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
     </div>
   );
 }
-
 

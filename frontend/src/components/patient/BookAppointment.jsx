@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { 
   FiCalendar, FiClock, FiUser, FiActivity, FiArrowRight, 
-  FiHash, FiFileText, FiVideo, FiMapPin, FiCheckCircle 
+  FiFileText, FiMapPin, FiCheckCircle 
 } from 'react-icons/fi';
-import { RiMoneyEuroBoxLine } from 'react-icons/ri';
 import { initPayment, finalizePayment, getBookedSlots } from '../../api/appointmentApi';
+import { sendNotification } from '../../api/notificationApi';
+import { getDoctors } from '../../api/doctorApi';
 import { MOCK_DOCTORS, TIME_SLOTS } from '../../data/mockData';
 
 export default function BookAppointment({ patientId, onSuccess }) {
@@ -13,6 +14,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [doctors, setDoctors] = useState(MOCK_DOCTORS);
 
   useEffect(() => {
     if (form.doctorId && form.appointmentDate) {
@@ -22,7 +24,16 @@ export default function BookAppointment({ patientId, onSuccess }) {
     }
   }, [form.doctorId, form.appointmentDate]);
 
-  const selectedDoctor = MOCK_DOCTORS.find(d => d.id === Number(form.doctorId));
+  useEffect(() => {
+    getDoctors()
+      .then((data) => {
+        const verifiedDoctors = data.filter((doctor) => doctor.verified !== false);
+        setDoctors(verifiedDoctors.length ? verifiedDoctors : data);
+      })
+      .catch(() => setDoctors(MOCK_DOCTORS));
+  }, []);
+
+  const selectedDoctor = doctors.find(d => d.id === Number(form.doctorId)) || MOCK_DOCTORS.find(d => d.id === Number(form.doctorId));
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -64,7 +75,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
         "cancel_url": "http://localhost:5173",
         "notify_url": "http://localhost:8083/api/appointments/payment-webhook",
         "order_id": initData.orderId,
-        "items": `Consultation with ${selectedDoctor.name}`,
+        "items": `Consultation with ${selectedDoctor?.name || 'Doctor'}`,
         "amount": fee.toFixed(2),
         "currency": "LKR",
         "hash": hashData.hash, 
@@ -81,6 +92,22 @@ export default function BookAppointment({ patientId, onSuccess }) {
         setLoading(true);
         try {
             await finalizePayment(initData.appointmentId);
+            await Promise.all([
+              sendNotification({
+                channel: 'EMAIL',
+                recipientRole: 'PATIENT',
+                recipientId: patientId,
+                subject: 'Appointment confirmed',
+                message: `Your appointment with ${selectedDoctor?.name || 'the doctor'} has been confirmed.`,
+              }),
+              sendNotification({
+                channel: 'SMS',
+                recipientRole: 'DOCTOR',
+                recipientId: Number(form.doctorId),
+                subject: 'New appointment booked',
+                message: `A new ${form.consultationType.toLowerCase()} consultation was booked for ${form.appointmentDate}.`,
+              }),
+            ]);
             setForm({ doctorId: '', appointmentDate: '', slotTime: '', reason: '', consultationType: 'ONLINE' });
             onSuccess('Payment successful! Booking confirmed.', 'success');
         } catch (err) {
@@ -133,7 +160,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
               <label className="form-label"><FiUser /> Select Doctor</label>
               <select name="doctorId" value={form.doctorId} onChange={handleChange} required>
                 <option value="">-- Choose a Doctor --</option>
-                {MOCK_DOCTORS.map(d => (
+                {doctors.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.name} — {d.specialization}
                   </option>
@@ -185,7 +212,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
           {selectedDoctor && (
             <div className="doctor-preview">
               <div className="doctor-preview-avatar">
-                {selectedDoctor.name[4]}
+                {selectedDoctor.name.replace('Dr. ', '').charAt(0)}
               </div>
               <div className="doctor-preview-info">
                 <h4>{selectedDoctor.name}</h4>

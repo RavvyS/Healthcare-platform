@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: healthcare/payment-service:latest
+          ports:
+            - containerPort: 8084
+          env:
+            - name: PAYHERE_MERCHANT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-platform-config
+                  key: PAYHERE_MERCHANT_ID
+            - name: PAYHERE_MERCHANT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-platform-config
+                  key: PAYHERE_MERCHANT_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - port: 8084
+      targetPort: 8084

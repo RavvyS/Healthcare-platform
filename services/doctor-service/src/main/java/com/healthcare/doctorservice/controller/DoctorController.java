@@ -25,7 +25,12 @@ public class DoctorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Doctor>> getAllDoctors() {
+    public ResponseEntity<List<Doctor>> getAllDoctors(
+            @RequestParam(required = false) String specialization
+    ) {
+        if (specialization != null && !specialization.isBlank()) {
+            return ResponseEntity.ok(doctorService.searchDoctors(specialization));
+        }
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 
@@ -78,11 +83,21 @@ public class DoctorController {
         return ResponseEntity.ok(doctorService.updateAppointmentStatus(appointmentId, status));
     }
 
+    @PatchMapping("/{id}/verification")
+    public ResponseEntity<Doctor> updateVerification(@PathVariable Long id, @RequestParam Boolean verified) {
+        return ResponseEntity.ok(doctorService.updateVerificationStatus(id, verified));
+    }
+
     // --- Prescription Endpoints ---
 
     @PostMapping("/appointments/{appointmentId}/prescribe")
     public ResponseEntity<Prescription> prescribe(@PathVariable Long appointmentId, 
                                                   @RequestBody Prescription prescription) {
         return ResponseEntity.ok(doctorService.issuePrescription(appointmentId, prescription));
+    }
+
+    @GetMapping("/patient/{patientId}/prescriptions")
+    public ResponseEntity<List<Prescription>> getPatientPrescriptions(@PathVariable Long patientId) {
+        return ResponseEntity.ok(doctorService.getPrescriptionsForPatient(patientId));
     }
 }
