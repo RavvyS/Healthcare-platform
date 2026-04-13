@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "prescriptions")
@@ -18,18 +17,18 @@ public class Prescription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long appointmentId;
     private Long doctorId;
     private Long patientId;
     
-    private String medication;
-    private String dosage;
-    private String instructions;
+    @Column(columnDefinition = "TEXT")
+    private String details;
     
-    private LocalDateTime issuedDate;
+    private LocalDate date;
 
     @PrePersist
     protected void onCreate() {
-        issuedDate = LocalDateTime.now();
+        if (date == null) {
+            date = LocalDate.now();
+        }
     }
 }

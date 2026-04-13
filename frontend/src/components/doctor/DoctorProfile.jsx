@@ -1,17 +1,49 @@
 import { useEffect, useState } from 'react';
-import { FiBriefcase, FiMail, FiMapPin, FiSave, FiUser } from 'react-icons/fi';
+import { FiBriefcase, FiMail, FiMapPin, FiSave, FiUser, FiPhone } from 'react-icons/fi';
 import { getDoctorById, updateDoctorProfile } from '../../api/doctorApi';
 import { Loading } from '../common/UI';
 
 const initialProfile = {
   name: '',
   email: '',
+  phone: '',
   specialization: '',
   hospital: '',
   consultationFee: '',
   availability: '',
   verified: false,
 };
+
+const MEDICAL_SPECIALIZATIONS = [
+  'General Physician',
+  'Cardiology',
+  'Neurology',
+  'Pediatrics',
+  'Orthopedics',
+  'Dermatology',
+  'Oncology',
+  'Gastroenterology',
+  'Psychiatry',
+  'Radiology',
+  'Ophthalmology',
+  'General Surgery',
+  'Internal Medicine',
+  'ENT (Otolaryngology)',
+  'Obstetrics & Gynecology',
+  'Urology',
+  'Nephrology',
+  'Pulmonology',
+  'Hematology',
+  'Endocrinology',
+  'Rheumatology',
+  'Anesthesiology',
+  'Emergency Medicine',
+  'Family Medicine',
+  'Infectious Diseases',
+  'Pathology',
+  'Physical Medicine & Rehabilitation',
+  'Sports Medicine'
+];
 
 export default function DoctorProfile({ doctorId, onSuccess }) {
   const [profile, setProfile] = useState(initialProfile);
@@ -54,7 +86,7 @@ export default function DoctorProfile({ doctorId, onSuccess }) {
   if (loading) return <Loading text="Loading doctor profile..." />;
 
   return (
-    <div className="card">
+    <div className="card shadow-glass">
       <div className="card-header">
         <div className="card-header-left">
           <div className="card-header-icon blue">
@@ -71,36 +103,49 @@ export default function DoctorProfile({ doctorId, onSuccess }) {
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label"><FiUser /> Full Name</label>
-              <input value={profile.name || ''} onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))} />
+              <input value={profile.name || ''} onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))} placeholder="e.g. Dr. Amal Perera" />
             </div>
             <div className="form-group">
               <label className="form-label"><FiMail /> Email</label>
-              <input value={profile.email || ''} onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))} />
+              <input value={profile.email || ''} onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))} placeholder="email@address.com" />
+            </div>
+            <div className="form-group">
+              <label className="form-label"><FiPhone /> Phone Number</label>
+              <input value={profile.phone || ''} onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))} placeholder="+94 7X XXX XXXX" />
             </div>
             <div className="form-group">
               <label className="form-label"><FiBriefcase /> Specialization</label>
-              <input value={profile.specialization || ''} onChange={(e) => setProfile((prev) => ({ ...prev, specialization: e.target.value }))} />
+              <select 
+                value={profile.specialization || ''} 
+                onChange={(e) => setProfile((prev) => ({ ...prev, specialization: e.target.value }))}
+                required
+              >
+                <option value="">Select Specialty</option>
+                {MEDICAL_SPECIALIZATIONS.map(spec => (
+                  <option key={spec} value={spec}>{spec}</option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label className="form-label"><FiMapPin /> Hospital / Clinic</label>
-              <input value={profile.hospital || ''} onChange={(e) => setProfile((prev) => ({ ...prev, hospital: e.target.value }))} />
+              <input value={profile.hospital || ''} onChange={(e) => setProfile((prev) => ({ ...prev, hospital: e.target.value }))} placeholder="Hospital Name" />
             </div>
             <div className="form-group">
-              <label className="form-label">Consultation Fee</label>
-              <input type="number" value={profile.consultationFee || ''} onChange={(e) => setProfile((prev) => ({ ...prev, consultationFee: e.target.value }))} />
+              <label className="form-label">Consultation Fee (LKR)</label>
+              <input type="number" value={profile.consultationFee || ''} onChange={(e) => setProfile((prev) => ({ ...prev, consultationFee: e.target.value }))} placeholder="2500" />
             </div>
             <div className="form-group">
               <label className="form-label">Verification Status</label>
-              <input value={profile.verified ? 'Verified by admin' : 'Pending admin verification'} disabled />
+              <input value={profile.verified ? '✓ Verified Practitioner' : '⚠️ Pending admin verification'} disabled style={{ fontWeight: 600, color: profile.verified ? 'var(--success)' : 'var(--warning)' }} />
             </div>
           </div>
           <div className="form-group" style={{ marginTop: 20 }}>
-            <label className="form-label">Availability Summary</label>
-            <textarea value={profile.availability || ''} onChange={(e) => setProfile((prev) => ({ ...prev, availability: e.target.value }))} />
+            <label className="form-label">Professional Bio / Availability Summary</label>
+            <textarea value={profile.availability || ''} onChange={(e) => setProfile((prev) => ({ ...prev, availability: e.target.value }))} placeholder="Briefly describe your clinical experience..."/>
           </div>
           <div style={{ marginTop: 20 }}>
-            <button className="btn btn-primary" type="submit" disabled={saving}>
-              <FiSave /> {saving ? 'Saving...' : 'Save Profile'}
+            <button className="btn btn-primary btn-full" type="submit" disabled={saving}>
+              <FiSave /> {saving ? 'Saving Profile...' : 'Save Profile Changes'}
             </button>
           </div>
         </form>

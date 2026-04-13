@@ -1,4 +1,5 @@
 const BASE_URL = 'http://localhost:8083/api/appointments';
+const DOCTOR_SERVICE_URL = 'http://localhost:8082';
 
 export const initPayment = async (data) => {
   const res = await fetch(`${BASE_URL}/init-payment`, {
@@ -42,14 +43,19 @@ export const getPatientAppointments = async (patientId) => {
 };
 
 export const getDoctorAppointments = async (doctorId) => {
-  const res = await fetch(`${BASE_URL}/doctor/${doctorId}`);
+  // Redirected to standalone Doctor Service
+  const res = await fetch(`${DOCTOR_SERVICE_URL}/doctors/${doctorId}/appointments`);
   if (!res.ok) throw new Error('Failed to fetch appointments');
   return res.json();
 };
 
 export const updateAppointmentStatus = async (id, status) => {
-  const res = await fetch(`${BASE_URL}/${id}/status?status=${status}`, {
-    method: 'PATCH',
+  // Mapping UI 'CONFIRMED' to Backend 'ACCEPTED' for assignment compliance
+  const backendStatus = status === 'CONFIRMED' ? 'ACCEPTED' : status;
+  
+  // Redirected to standalone Doctor Service
+  const res = await fetch(`${DOCTOR_SERVICE_URL}/appointments/${id}/status?status=${backendStatus}`, {
+    method: 'PUT',
   });
   if (!res.ok) throw new Error('Failed to update status');
   return res.json();
