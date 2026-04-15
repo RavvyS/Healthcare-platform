@@ -7,6 +7,7 @@ public class NotificationRequest {
     private String channel;
     private String recipientRole;
     private Long recipientId;
+    private String recipientEmail;
     private String subject;
     private String message;
 }

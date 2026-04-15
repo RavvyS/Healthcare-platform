@@ -1,0 +1,17 @@
+com\healthcare\patientservice\dto\MedicalReportDTO.class
+com\healthcare\patientservice\model\PatientProfile.class
+com\healthcare\patientservice\dto\PatientProfileDTO$PatientProfileDTOBuilder.class
+com\healthcare\patientservice\exception\GlobalExceptionHandler.class
+com\healthcare\patientservice\dto\PatientProfileDTO.class
+com\healthcare\patientservice\repository\MedicalReportRepository.class
+com\healthcare\patientservice\model\MedicalReport.class
+com\healthcare\patientservice\dto\MedicalReportDTO$MedicalReportDTOBuilder.class
+com\healthcare\patientservice\exception\ErrorResponse.class
+com\healthcare\patientservice\model\MedicalReport$MedicalReportBuilder.class
+com\healthcare\patientservice\service\PatientProfileService.class
+com\healthcare\patientservice\model\PatientProfile$PatientProfileBuilder.class
+com\healthcare\patientservice\exception\ErrorResponse$ErrorResponseBuilder.class
+com\healthcare\patientservice\controller\PatientProfileController.class
+com\healthcare\patientservice\PatientServiceApplication.class
+com\healthcare\patientservice\exception\ResourceNotFoundException.class
+com\healthcare\patientservice\repository\PatientProfileRepository.class

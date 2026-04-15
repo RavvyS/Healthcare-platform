@@ -8,6 +8,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import java.util.List;
+
 @Entity
 @Table(name = "patient_profiles")
 @Data
@@ -17,7 +21,7 @@ import lombok.NoArgsConstructor;
 public class PatientProfile {
 
     @Id
-    private Long id;
+    private Long patientId;
 
     private String fullName;
     private String email;
@@ -27,4 +31,7 @@ public class PatientProfile {
     private String allergies;
     private String emergencyContact;
     private String medicalNotes;
+
+    @OneToMany(mappedBy = "patientProfile", cascade = CascadeType.ALL)
+    private List<MedicalReport> medicalReports;
 }

@@ -1,9 +1,11 @@
 package com.healthcare.patientservice.controller;
 
-import com.healthcare.patientservice.model.MedicalReport;
-import com.healthcare.patientservice.model.PatientProfile;
+import com.healthcare.patientservice.dto.MedicalReportDTO;
+import com.healthcare.patientservice.dto.PatientProfileDTO;
 import com.healthcare.patientservice.service.PatientProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,22 +27,26 @@ public class PatientProfileController {
     private final PatientProfileService patientProfileService;
 
     @GetMapping("/{patientId}/profile")
-    public ResponseEntity<PatientProfile> getProfile(@PathVariable Long patientId) {
+    public ResponseEntity<PatientProfileDTO> getProfile(@PathVariable Long patientId) {
         return ResponseEntity.ok(patientProfileService.getProfile(patientId));
     }
 
     @PutMapping("/{patientId}/profile")
-    public ResponseEntity<PatientProfile> updateProfile(@PathVariable Long patientId, @RequestBody PatientProfile request) {
+    public ResponseEntity<PatientProfileDTO> updateProfile(
+            @PathVariable Long patientId, 
+            @Valid @RequestBody PatientProfileDTO request) {
         return ResponseEntity.ok(patientProfileService.updateProfile(patientId, request));
     }
 
     @GetMapping("/{patientId}/reports")
-    public ResponseEntity<List<MedicalReport>> getReports(@PathVariable Long patientId) {
+    public ResponseEntity<List<MedicalReportDTO>> getReports(@PathVariable Long patientId) {
         return ResponseEntity.ok(patientProfileService.getReports(patientId));
     }
 
     @PostMapping("/{patientId}/reports")
-    public ResponseEntity<MedicalReport> addReport(@PathVariable Long patientId, @RequestBody MedicalReport report) {
-        return ResponseEntity.ok(patientProfileService.addReport(patientId, report));
+    public ResponseEntity<MedicalReportDTO> addReport(
+            @PathVariable Long patientId, 
+            @Valid @RequestBody MedicalReportDTO report) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(patientProfileService.addReport(patientId, report));
     }
 }

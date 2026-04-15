@@ -2,7 +2,6 @@ package com.healthcare.auth_service.controller;
 
 import com.healthcare.auth_service.dto.*;
 import com.healthcare.auth_service.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,11 +9,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService service;
+
+    public AuthController(AuthService service) {
+        this.service = service;
+    }
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) {
@@ -42,5 +44,17 @@ public class AuthController {
             @RequestBody UpdateUserStatusRequest request
     ) {
         return ResponseEntity.ok(service.updateUserStatus(id, request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        service.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        service.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 }
