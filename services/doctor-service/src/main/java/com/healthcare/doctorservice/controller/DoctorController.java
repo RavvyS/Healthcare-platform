@@ -8,8 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Doctor Controller aligned with Assignment Example APIs.
+ */
 @RestController
-@RequestMapping("/api/doctors")
+@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping
 public class DoctorController {
 
     private final DoctorService doctorService;
@@ -19,85 +23,72 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
-    @PostMapping
-    public ResponseEntity<Doctor> createDoctor(@RequestBody Doctor doctor) {
+    // --- 1. Doctor Profile Management ---
+    @PostMapping("/doctors")
+    public ResponseEntity<Doctor> registerDoctor(@RequestBody Doctor doctor) {
         return ResponseEntity.ok(doctorService.saveDoctor(doctor));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Doctor>> getAllDoctors(
-            @RequestParam(required = false) String specialization
-    ) {
-        if (specialization != null && !specialization.isBlank()) {
-            return ResponseEntity.ok(doctorService.searchDoctors(specialization));
-        }
-        return ResponseEntity.ok(doctorService.getAllDoctors());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Doctor> getDoctorById(@PathVariable Long id) {
+    @GetMapping("/doctors/{id}")
+    public ResponseEntity<Doctor> viewDoctorProfile(@PathVariable Long id) {
         return doctorService.getDoctorById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Doctor> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctor) {
+    @PutMapping("/doctors/{id}")
+    public ResponseEntity<Doctor> updateDoctorProfile(@PathVariable Long id, @RequestBody Doctor doctor) {
         return ResponseEntity.ok(doctorService.updateDoctor(id, doctor));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDoctor(@PathVariable Long id) {
-        doctorService.deleteDoctor(id);
-        return ResponseEntity.noContent().build();
+    @GetMapping("/doctors")
+    public ResponseEntity<List<Doctor>> listAllDoctors() {
+        return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 
-    // --- Availability Endpoints ---
-
-    @PostMapping("/{id}/availability")
+    // --- 2. Availability Management ---
+    @PostMapping("/doctors/{id}/availability")
     public ResponseEntity<Availability> addAvailability(@PathVariable Long id, @RequestBody Availability availability) {
         return ResponseEntity.ok(doctorService.addAvailability(id, availability));
     }
 
-    @GetMapping("/{id}/availability")
-    public ResponseEntity<List<Availability>> getAvailability(@PathVariable Long id) {
+    @GetMapping("/doctors/{id}/availability")
+    public ResponseEntity<List<Availability>> viewAvailability(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getAvailabilityByDoctorId(id));
     }
 
-    @DeleteMapping("/availability/{availabilityId}")
-    public ResponseEntity<Void> removeAvailability(@PathVariable Long availabilityId) {
-        doctorService.removeAvailability(availabilityId);
-        return ResponseEntity.noContent().build();
+    @PutMapping("/availability/{availabilityId}")
+    public ResponseEntity<Availability> updateAvailability(@PathVariable Long availabilityId, @RequestBody Availability availability) {
+        return ResponseEntity.ok(doctorService.updateAvailability(availabilityId, availability));
     }
 
-    // --- Appointment Endpoints ---
-
-    @GetMapping("/{id}/appointments")
-    public ResponseEntity<List<Appointment>> getAppointments(@PathVariable Long id) {
+    // --- 3. Appointment Handling ---
+    @GetMapping("/doctors/{id}/appointments")
+    public ResponseEntity<List<Appointment>> viewAppointments(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getAppointmentsForDoctor(id));
     }
 
-    @PatchMapping("/appointments/{appointmentId}/status")
-    public ResponseEntity<Appointment> updateStatus(@PathVariable Long appointmentId, 
-                                                   @RequestParam AppointmentStatus status) {
+    @PutMapping("/appointments/{appointmentId}/status")
+    public ResponseEntity<Appointment> handleAppointment(@PathVariable Long appointmentId, 
+                                                       @RequestParam AppointmentStatus status) {
         return ResponseEntity.ok(doctorService.updateAppointmentStatus(appointmentId, status));
     }
 
-    @PatchMapping("/{id}/verification")
-    public ResponseEntity<Doctor> updateVerification(@PathVariable Long id, @RequestParam Boolean verified) {
-        return ResponseEntity.ok(doctorService.updateVerificationStatus(id, verified));
-    }
-
-    // --- Prescription Endpoints ---
-
-    @PostMapping("/appointments/{appointmentId}/prescribe")
-    public ResponseEntity<Prescription> prescribe(@PathVariable Long appointmentId, 
-                                                  @RequestBody Prescription prescription) {
+    // --- Prescription Issuance ---
+    @PostMapping("/prescriptions")
+    public ResponseEntity<Prescription> createPrescription(@RequestParam Long appointmentId, 
+                                                          @RequestBody Prescription prescription) {
         return ResponseEntity.ok(doctorService.issuePrescription(appointmentId, prescription));
     }
 
-    @GetMapping("/patient/{patientId}/prescriptions")
-    public ResponseEntity<List<Prescription>> getPatientPrescriptions(@PathVariable Long patientId) {
+    @GetMapping("/prescriptions/{patientId}")
+    public ResponseEntity<List<Prescription>> viewPrescriptions(@PathVariable Long patientId) {
         return ResponseEntity.ok(doctorService.getPrescriptionsForPatient(patientId));
+    }
+
+    // --- 5. View Patient Info ---
+    @GetMapping("/patients/{id}")
+    public ResponseEntity<Object> viewPatientInfo(@PathVariable Long id) {
+        return ResponseEntity.ok(doctorService.getPatientInfo(id));
     }
 }

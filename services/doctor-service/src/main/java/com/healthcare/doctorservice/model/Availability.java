@@ -24,7 +24,7 @@ public class Availability {
     @JsonBackReference
     private Doctor doctor;
 
-    private String dayOfWeek; // e.g., "MONDAY"
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private java.time.LocalDate date;
+    private java.time.LocalTime startTime;
+    private java.time.LocalTime endTime;
 }

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { FiCalendar, FiClock, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiPlus, FiTrash2, FiAlertCircle } from 'react-icons/fi';
 import { addDoctorAvailability, getDoctorAvailability, removeDoctorAvailability } from '../../api/doctorApi';
 import { EmptyState, Loading } from '../common/UI';
 
 const initialSlot = {
-  dayOfWeek: '',
+  date: new Date().toISOString().split('T')[0],
   startTime: '',
   endTime: '',
 };
@@ -14,6 +14,9 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(initialSlot);
+  const [error, setError] = useState('');
+
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     const load = async () => {
@@ -31,8 +34,31 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
     load();
   }, [doctorId, onSuccess]);
 
+  const validateTimes = () => {
+    const now = new Date();
+    const currentTimeStr = now.toTimeString().slice(0, 5); // HH:mm
+    
+    if (form.date === today && form.startTime < currentTimeStr) {
+      return "For today, you must select a start time in the future.";
+    }
+    
+    if (form.endTime && form.startTime >= form.endTime) {
+      return "End time must be later than start time.";
+    }
+
+    return null;
+  };
+
   const handleAdd = async (event) => {
     event.preventDefault();
+    
+    const timeError = validateTimes();
+    if (timeError) {
+      setError(timeError);
+      return;
+    }
+    
+    setError('');
     setSaving(true);
     try {
       const created = await addDoctorAvailability(doctorId, form);
@@ -60,7 +86,7 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
 
   return (
     <div className="section-gap">
-      <div className="card">
+      <div className="card shadow-colored">
         <div className="card-header">
           <div className="card-header-left">
             <div className="card-header-icon purple">
@@ -68,7 +94,7 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
             </div>
             <div>
               <h3>Availability Planner</h3>
-              <p>Publish recurring clinic and telemedicine windows</p>
+              <p>Schedule specific consultation windows starting from today</p>
             </div>
           </div>
         </div>
@@ -76,26 +102,53 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
           <form onSubmit={handleAdd}>
             <div className="form-grid">
               <div className="form-group">
-                <label className="form-label">Day of Week</label>
-                <select value={form.dayOfWeek} onChange={(e) => setForm((prev) => ({ ...prev, dayOfWeek: e.target.value }))} required>
-                  <option value="">Select day</option>
-                  {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((day) => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
+                <label className="form-label"><FiCalendar /> Select Date</label>
+                <input 
+                  type="date" 
+                  min={today}
+                  value={form.date} 
+                  onChange={(e) => {
+                    setError('');
+                    setForm((prev) => ({ ...prev, date: e.target.value }));
+                  }} 
+                  required 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label"><FiClock /> Start Time</label>
-                <input type="time" value={form.startTime} onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))} required />
+                <input 
+                  type="time" 
+                  value={form.startTime} 
+                  onChange={(e) => {
+                    setError('');
+                    setForm((prev) => ({ ...prev, startTime: e.target.value }));
+                  }} 
+                  required 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label"><FiClock /> End Time</label>
-                <input type="time" value={form.endTime} onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))} required />
+                <input 
+                  type="time" 
+                  value={form.endTime} 
+                  onChange={(e) => {
+                    setError('');
+                    setForm((prev) => ({ ...prev, endTime: e.target.value }));
+                  }} 
+                  required 
+                />
               </div>
             </div>
+
+            {error && (
+              <div className="error-alert" style={{marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--danger)', fontSize: '0.85rem'}}>
+                <FiAlertCircle /> {error}
+              </div>
+            )}
+
             <div style={{ marginTop: 20 }}>
-              <button className="btn btn-primary" type="submit" disabled={saving}>
-                <FiPlus /> {saving ? 'Adding...' : 'Add Availability Slot'}
+              <button className="btn btn-primary btn-full" type="submit" disabled={saving || !!error}>
+                <FiPlus /> {saving ? 'Verifying & Adding...' : 'Add Availability Slot'}
               </button>
             </div>
           </form>
@@ -109,33 +162,33 @@ export default function DoctorAvailability({ doctorId, onSuccess }) {
               <FiClock />
             </div>
             <div>
-              <h3>Published Slots</h3>
-              <p>Your currently configured recurring schedule</p>
+              <h3>Scheduled Clinical Sessions</h3>
+              <p>Your confirmed availability windows</p>
             </div>
           </div>
         </div>
         <div className="card-body">
           {slots.length === 0 ? (
-            <EmptyState title="No availability yet" subtitle="Add consultation windows so patients can understand when you practice." />
+            <EmptyState title="No availability yet" subtitle="Slots you add will appear here. Patients can only book future windows." />
           ) : (
             <div className="appointment-list">
-              {slots.map((slot) => (
+              {[...slots].sort((a,b) => new Date(a.date) - new Date(b.date)).map((slot) => (
                 <div className="appt-item" key={slot.id}>
                   <div className="appt-item-left">
                     <div className="appt-avatar doctor">
                       <FiCalendar />
                     </div>
                     <div className="appt-info">
-                      <h4>{slot.dayOfWeek}</h4>
+                      <h4>{new Date(slot.date).toDateString()}</h4>
                       <div className="appt-info-meta">
-                        <span className="appt-meta-chip">{slot.startTime}</span>
+                        <span className="appt-meta-chip"><FiClock /> {slot.startTime}</span>
                         <span className="appt-meta-chip">to</span>
                         <span className="appt-meta-chip">{slot.endTime}</span>
                       </div>
                     </div>
                   </div>
                   <div className="appt-item-right">
-                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(slot.id)}>
+                    <button className="btn btn-sm btn-ghost" onClick={() => handleDelete(slot.id)}>
                       <FiTrash2 /> Remove
                     </button>
                   </div>

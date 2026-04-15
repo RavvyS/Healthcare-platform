@@ -34,6 +34,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('DASHBOARD');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [theme, setTheme] = useState('light');
+  const [doctorProfile, setDoctorProfile] = useState(null);
 
   // Simulated patient ID — replace with JWT-decoded value in production
   const PATIENT_ID = '42';
@@ -42,6 +43,16 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (role === 'DOCTOR') {
+      import('./api/doctorApi').then(({ getDoctorById }) => {
+        getDoctorById(DOCTOR_ID)
+          .then(data => setDoctorProfile(data))
+          .catch(err => console.error("Sidebar sync failed:", err));
+      });
+    }
+  }, [role, refreshTrigger]);
 
   const toggleTheme = () => setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'));
 
@@ -125,7 +136,11 @@ function App() {
 
   const roleMeta = {
     PATIENT: { initials: 'J', name: 'John Doe', roleText: 'Patient' },
-    DOCTOR: { initials: 'A', name: 'Dr. Amal Perera', roleText: 'General Physician' },
+    DOCTOR: { 
+      initials: doctorProfile?.name?.charAt(0) || 'A', 
+      name: doctorProfile?.name || 'Dr. Amal Perera', 
+      roleText: doctorProfile?.specialization || 'General Physician' 
+    },
     ADMIN: { initials: 'N', name: 'Nadeesha Admin', roleText: 'Platform Administrator' },
   };
 
@@ -255,7 +270,13 @@ function App() {
         )}
 
         {role === 'DOCTOR' && activeTab === 'PROFILE' && (
-          <DoctorProfile doctorId={DOCTOR_ID} onSuccess={addToast} />
+          <DoctorProfile 
+            doctorId={DOCTOR_ID} 
+            onSuccess={(msg, type) => {
+              addToast(msg, type);
+              if (type !== 'error') setRefreshTrigger(prev => prev + 1);
+            }} 
+          />
         )}
 
         {role === 'ADMIN' && activeTab === 'ADMIN' && (
