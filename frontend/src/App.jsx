@@ -26,19 +26,62 @@ import PatientRecords from './components/patient/PatientRecords';
 import SymptomChecker from './components/patient/SymptomChecker';
 import Profile from './components/patient/Profile';
 import Reports from './components/patient/Reports';
+import AuthForms from './components/common/AuthForms';
+import HomePage from './components/common/HomePage';
 import { useToast } from './hooks/useToast';
 
 function App() {
   const { toasts, addToast } = useToast();
-  const [role, setRole] = useState(null);
-  const [activeTab, setActiveTab] = useState('DASHBOARD');
+  
+  // Initialize state from localStorage
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('medicare_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
+  const [role, setRole] = useState(() => localStorage.getItem('medicare_role'));
+  const [showAuth, setShowAuth] = useState(() => localStorage.getItem('medicare_show_auth') === 'true');
+  
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('medicare_active_tab') || 'DASHBOARD';
+  });
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('medicare_theme') || 'light');
   const [doctorProfile, setDoctorProfile] = useState(null);
 
-  // Simulated patient ID — replace with JWT-decoded value in production
-  const PATIENT_ID = '42';
-  const DOCTOR_ID = 1;
+  // Sync state to localStorage
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('medicare_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('medicare_user');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (role) {
+      localStorage.setItem('medicare_role', role);
+    } else {
+      localStorage.removeItem('medicare_role');
+    }
+  }, [role]);
+
+  useEffect(() => {
+    localStorage.setItem('medicare_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('medicare_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('medicare_show_auth', showAuth);
+  }, [showAuth]);
+
+  const PATIENT_ID = user?.userId?.toString() || '';
+  const ADMIN_ID = user?.userId || '';
+  const DOCTOR_ID = user?.userId || '';
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -56,57 +99,35 @@ function App() {
 
   const toggleTheme = () => setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'));
 
-  if (!role) {
+  if (!user || !role) {
+    if (!showAuth) {
+      return <HomePage onGetStarted={() => setShowAuth(true)} theme={theme} toggleTheme={toggleTheme} />;
+    }
+
     return (
-      <div className="landing-screen">
-        <div className="landing-bg-orb landing-bg-orb-1" />
-        <div className="landing-bg-orb landing-bg-orb-2" />
-
-        <div className="landing-top-bar">
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
-        </div>
-
-        <div className="landing-content">
-          <div className="landing-logo">
-            <div className="landing-logo-icon">
-              <RiHospitalLine size={32} />
-            </div>
-            <div className="landing-logo-text">
-              <h1>Medi<em>Care</em></h1>
-              <p>Smart Healthcare Platform</p>
-            </div>
-          </div>
-
-          <p className="landing-tagline">
-            Seamless appointments, secure payments, and virtual consultations
-            <br />
-            all in one intelligent healthcare platform.
-          </p>
-
-          <div className="role-cards">
-            <div className="role-card" onClick={() => { setRole('PATIENT'); setActiveTab('OVERVIEW'); }}>
-              <div className="role-card-icon">
-                <FiUserPlus size={28} />
-              </div>
-              <h3>Patient Portal</h3>
-              <p>Manage appointments, reports, prescriptions, and symptom guidance.</p>
-            </div>
-            <div className="role-card" onClick={() => { setRole('DOCTOR'); setActiveTab('OVERVIEW'); }}>
-              <div className="role-card-icon">
-                <FiActivity size={28} />
-              </div>
-              <h3>Doctor Portal</h3>
-              <p>Track requests, manage availability, and maintain consultation readiness.</p>
-            </div>
-            <div className="role-card" onClick={() => { setRole('ADMIN'); setActiveTab('ADMIN'); }}>
-              <div className="role-card-icon">
-                <FiShield size={28} />
-              </div>
-              <h3>Admin Console</h3>
-              <p>Verify doctors, manage users, and monitor platform operations.</p>
-            </div>
-          </div>
-        </div>
+      <div style={{ position: 'relative', width: '100%', minHeight: '100vh' }}>
+        <button 
+          className="btn btn-ghost"
+          style={{ position: 'absolute', top: 20, left: 20, zIndex: 100 }}
+          onClick={() => setShowAuth(false)}
+        >
+          ← Back to Home
+        </button>
+        <AuthForms 
+          onSuccess={(authData) => {
+            // Block users who are pending admin approval
+            if (authData.accountStatus === 'PENDING_VERIFICATION') {
+              addToast('Your account is pending admin approval. You will receive an email once approved.', 'warning');
+              return; // Do NOT log them in
+            }
+            setUser(authData);
+            setRole(authData.role);
+            setActiveTab(authData.role === 'ADMIN' ? 'ADMIN' : 'OVERVIEW');
+            addToast(`Welcome back, ${authData.fullName}!`, 'success');
+          }} 
+          onError={addToast} 
+        />
+        <Toast toasts={toasts} />
       </div>
     );
   }
@@ -135,13 +156,13 @@ function App() {
   const navItems = role === 'PATIENT' ? patientNav : role === 'DOCTOR' ? doctorNav : adminNav;
 
   const roleMeta = {
-    PATIENT: { initials: 'J', name: 'John Doe', roleText: 'Patient' },
+    PATIENT: { initials: user.fullName ? user.fullName.charAt(0).toUpperCase() : 'P', name: user.fullName || 'Patient', roleText: 'Patient' },
     DOCTOR: { 
-      initials: doctorProfile?.name?.charAt(0) || 'A', 
-      name: doctorProfile?.name || 'Dr. Amal Perera', 
+      initials: doctorProfile?.name?.charAt(0) || user.fullName?.charAt(0) || 'D', 
+      name: doctorProfile?.name || user.fullName || 'Doctor', 
       roleText: doctorProfile?.specialization || 'General Physician' 
     },
-    ADMIN: { initials: 'N', name: 'Nadeesha Admin', roleText: 'Platform Administrator' },
+    ADMIN: { initials: user.fullName ? user.fullName.charAt(0).toUpperCase() : 'A', name: user.fullName || 'Admin', roleText: 'Platform Administrator' },
   };
 
   return (
@@ -187,7 +208,15 @@ function App() {
 
           <button
             className="btn btn-ghost btn-sm btn-full"
-            onClick={() => setRole(null)}
+            onClick={() => {
+              setRole(null);
+              setUser(null);
+              setShowAuth(false);
+              localStorage.removeItem('medicare_user');
+              localStorage.removeItem('medicare_role');
+              localStorage.removeItem('medicare_active_tab');
+              localStorage.removeItem('medicare_show_auth');
+            }}
             style={{ gap: 7 }}
           >
             <FiLogOut size={14} />

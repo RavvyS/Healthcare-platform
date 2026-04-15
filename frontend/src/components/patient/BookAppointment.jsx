@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   FiCalendar, FiClock, FiUser, FiActivity, FiArrowRight, 
-  FiFileText, FiMapPin, FiCheckCircle 
+  FiFileText, FiMapPin, FiCheckCircle, FiVideo 
 } from 'react-icons/fi';
 import { initPayment, finalizePayment, getBookedSlots } from '../../api/appointmentApi';
 import { sendNotification } from '../../api/notificationApi';

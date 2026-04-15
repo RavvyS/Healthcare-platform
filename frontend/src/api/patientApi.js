@@ -4,7 +4,7 @@ import axios from 'axios';
 // Simulated patientId — replace with JWT-decoded value in production
 export const PATIENT_ID = '42';
 
-const BASE_URL = 'http://localhost:8080/api/patients';
+const BASE_URL = 'http://localhost:8086/api/patients';
 
 const client = axios.create({
   baseURL: BASE_URL,
