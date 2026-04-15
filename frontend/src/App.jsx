@@ -24,6 +24,8 @@ import PatientAppointments from './components/patient/PatientAppointments';
 import PatientDashboard from './components/patient/PatientDashboard';
 import PatientRecords from './components/patient/PatientRecords';
 import SymptomChecker from './components/patient/SymptomChecker';
+import Profile from './components/patient/Profile';
+import Reports from './components/patient/Reports';
 import { useToast } from './hooks/useToast';
 
 function App() {
@@ -33,7 +35,8 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [theme, setTheme] = useState('light');
 
-  const PATIENT_ID = 42;
+  // Simulated patient ID — replace with JWT-decoded value in production
+  const PATIENT_ID = '42';
   const DOCTOR_ID = 1;
 
   useEffect(() => {
@@ -98,11 +101,13 @@ function App() {
   }
 
   const patientNav = [
-    { id: 'OVERVIEW', icon: <FiHome size={16} />, label: 'Overview' },
-    { id: 'BOOK', icon: <FiCalendar size={16} />, label: 'Book Appointment' },
-    { id: 'MY_APPOINTMENTS', icon: <FiList size={16} />, label: 'My Appointments' },
-    { id: 'RECORDS', icon: <FiFileText size={16} />, label: 'My Records' },
-    { id: 'SYMPTOMS', icon: <FiActivity size={16} />, label: 'AI Symptom Check' },
+    { id: 'OVERVIEW',        icon: <FiHome size={16} />,     label: 'Overview' },
+    { id: 'BOOK',           icon: <FiCalendar size={16} />, label: 'Book Appointment' },
+    { id: 'MY_APPOINTMENTS',icon: <FiList size={16} />,     label: 'My Appointments' },
+    { id: 'RECORDS',        icon: <FiFileText size={16} />, label: 'My Records' },
+    { id: 'PROFILE',        icon: <FiUser size={16} />,     label: 'My Profile' },
+    { id: 'REPORTS',        icon: <FiClipboard size={16} />,label: 'Medical Reports' },
+    { id: 'SYMPTOMS',       icon: <FiActivity size={16} />, label: 'AI Symptom Check' },
   ];
 
   const doctorNav = [
@@ -223,6 +228,14 @@ function App() {
 
         {role === 'PATIENT' && activeTab === 'RECORDS' && (
           <PatientRecords patientId={PATIENT_ID} onSuccess={addToast} />
+        )}
+
+        {role === 'PATIENT' && activeTab === 'PROFILE' && (
+          <Profile patientId={PATIENT_ID} onSuccess={addToast} />
+        )}
+
+        {role === 'PATIENT' && activeTab === 'REPORTS' && (
+          <Reports patientId={PATIENT_ID} onSuccess={addToast} />
         )}
 
         {role === 'PATIENT' && activeTab === 'SYMPTOMS' && (

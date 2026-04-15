@@ -54,6 +54,9 @@ Detailed assignment mapping is available in [docs/project-overview.md](/Users/ra
 │   ├── appointment-service/
 │   ├── payment-service/
 │   └── telemedicine-service/
+│   ├── patient-service/
+│   ├── ai-symptom-service/
+│   └── notification-service/
 ├── docker/
 ├── kubernetes/
 ├── docs/

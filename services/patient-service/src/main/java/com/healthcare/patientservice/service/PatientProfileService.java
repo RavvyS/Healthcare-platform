@@ -1,5 +1,8 @@
 package com.healthcare.patientservice.service;
 
+import com.healthcare.patientservice.dto.MedicalReportDTO;
+import com.healthcare.patientservice.dto.PatientProfileDTO;
+import com.healthcare.patientservice.exception.ResourceNotFoundException;
 import com.healthcare.patientservice.model.MedicalReport;
 import com.healthcare.patientservice.model.PatientProfile;
 import com.healthcare.patientservice.repository.MedicalReportRepository;
@@ -8,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,23 +20,16 @@ public class PatientProfileService {
     private final PatientProfileRepository patientProfileRepository;
     private final MedicalReportRepository medicalReportRepository;
 
-    public PatientProfile getProfile(Long patientId) {
-        return patientProfileRepository.findById(patientId)
-                .orElseGet(() -> patientProfileRepository.save(PatientProfile.builder()
-                        .id(patientId)
-                        .fullName("John Doe")
-                        .email("patient@medicare.lk")
-                        .phone("+94 77 123 4567")
-                        .address("Colombo, Sri Lanka")
-                        .bloodGroup("A+")
-                        .allergies("No known drug allergies")
-                        .emergencyContact("Jane Doe - +94 71 222 3344")
-                        .medicalNotes("History of seasonal asthma.")
-                        .build()));
+    public PatientProfileDTO getProfile(Long patientId) {
+        PatientProfile profile = patientProfileRepository.findById(patientId)
+                .orElse(PatientProfile.builder().patientId(patientId).build());
+        return mapToDTO(profile);
     }
 
-    public PatientProfile updateProfile(Long patientId, PatientProfile request) {
-        PatientProfile existing = getProfile(patientId);
+    public PatientProfileDTO updateProfile(Long patientId, PatientProfileDTO request) {
+        PatientProfile existing = patientProfileRepository.findById(patientId)
+                .orElse(PatientProfile.builder().patientId(patientId).build());
+
         existing.setFullName(request.getFullName());
         existing.setEmail(request.getEmail());
         existing.setPhone(request.getPhone());
@@ -41,18 +38,60 @@ public class PatientProfileService {
         existing.setAllergies(request.getAllergies());
         existing.setEmergencyContact(request.getEmergencyContact());
         existing.setMedicalNotes(request.getMedicalNotes());
-        return patientProfileRepository.save(existing);
+
+        PatientProfile saved = patientProfileRepository.save(existing);
+        return mapToDTO(saved);
     }
 
-    public List<MedicalReport> getReports(Long patientId) {
-        getProfile(patientId);
-        return medicalReportRepository.findByPatientIdOrderByUploadedAtDesc(patientId);
+    public List<MedicalReportDTO> getReports(Long patientId) {
+        if (!patientProfileRepository.existsById(patientId)) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<MedicalReport> reports = medicalReportRepository
+                .findByPatientProfile_PatientIdOrderByUploadedAtDesc(patientId);
+        return reports.stream().map(this::mapToReportDTO).collect(Collectors.toList());
     }
 
-    public MedicalReport addReport(Long patientId, MedicalReport report) {
-        getProfile(patientId);
-        report.setId(null);
-        report.setPatientId(patientId);
-        return medicalReportRepository.save(report);
+    public MedicalReportDTO addReport(Long patientId, MedicalReportDTO reportDto) {
+        PatientProfile profile = patientProfileRepository.findById(patientId)
+                .orElseGet(() -> patientProfileRepository.save(PatientProfile.builder().patientId(patientId).build()));
+
+        MedicalReport report = MedicalReport.builder()
+                .patientProfile(profile)
+                .reportName(reportDto.getReportName())
+                .reportType(reportDto.getReportType())
+                .notes(reportDto.getNotes())
+                .documentUrl(reportDto.getDocumentUrl())
+                .build();
+
+        MedicalReport saved = medicalReportRepository.save(report);
+        return mapToReportDTO(saved);
+    }
+
+    private PatientProfileDTO mapToDTO(PatientProfile profile) {
+        return PatientProfileDTO.builder()
+                .patientId(profile.getPatientId())
+                .fullName(profile.getFullName())
+                .email(profile.getEmail())
+                .phone(profile.getPhone())
+                .address(profile.getAddress())
+                .bloodGroup(profile.getBloodGroup())
+                .allergies(profile.getAllergies())
+                .emergencyContact(profile.getEmergencyContact())
+                .medicalNotes(profile.getMedicalNotes())
+                .build();
+    }
+
+    private MedicalReportDTO mapToReportDTO(MedicalReport report) {
+        return MedicalReportDTO.builder()
+                .reportId(report.getReportId())
+                .patientId(report.getPatientProfile().getPatientId())
+                .reportName(report.getReportName())
+                .reportType(report.getReportType())
+                .notes(report.getNotes())
+                .documentUrl(report.getDocumentUrl())
+                .uploadedAt(report.getUploadedAt())
+                .build();
     }
 }
