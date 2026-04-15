@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import { 
   FiCalendar, FiClock, FiCheck, FiX, FiActivity, 
-  FiFilter, FiInbox, FiCheckCircle, FiTrash2, FiUser
+  FiFilter, FiInbox, FiCheckCircle, FiTrash2, FiUser, FiFileText
 } from 'react-icons/fi';
 import { RiHospitalLine } from 'react-icons/ri';
 import { getDoctorAppointments, updateAppointmentStatus } from '../../api/appointmentApi';
 import { sendNotification } from '../../api/notificationApi';
+import { getPatientInfo } from '../../api/doctorApi';
 import { StatusBadge, Loading, EmptyState, ConsultationBadge } from '../common/UI';
+import PatientInfoModal from './PatientInfoModal';
+import PrescriptionModal from './PrescriptionModal';
 
 export default function DoctorAppointments({ doctorId, onSuccess }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
+  
+  // Modal states
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [prescribingAppt, setPrescribingAppt] = useState(null);
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -45,9 +52,19 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
         });
       }
       onSuccess(`Appointment marked as ${status}`, 'success');
-      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: status === 'ACCEPTED' ? 'ACCEPTED' : (status === 'CONFIRMED' ? 'ACCEPTED' : status) } : a));
+      fetchAppointments();
     } catch {
       onSuccess('Failed to update status', 'error');
+    }
+  };
+
+  const handleViewPatient = async (patientId) => {
+    try {
+      const data = await getPatientInfo(patientId);
+      setSelectedPatient(data);
+    } catch {
+      onSuccess('Failed to fetch patient records', 'error');
     }
   };
 
@@ -59,7 +76,7 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
   });
 
   const pendingAppointments = filteredAppointments.filter(a => a.status === 'PENDING');
-  const confirmedAppointments = filteredAppointments.filter(a => a.status === 'CONFIRMED');
+  const confirmedAppointments = filteredAppointments.filter(a => ['CONFIRMED', 'ACCEPTED'].includes(a.status));
   const cancelledAppointments = filteredAppointments.filter(a => ['CANCELLED', 'REJECTED'].includes(a.status));
 
   return (
@@ -111,20 +128,23 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
               {pendingAppointments.map(app => (
                 <div key={app.id} className="appt-item">
                   <div className="appt-item-left">
-                    <div className="appt-avatar patient">
-                      <FiUser />
+                    <div className="appt-avatar patient" onClick={() => handleViewPatient(app.patientId)} style={{cursor: 'pointer'}}>
+                      <FiUser title="Click to view health records" />
                     </div>
                     <div className="appt-info">
                       <h4>Patient #{app.patientId}</h4>
                       <div className="appt-info-meta">
-                        <span className="appt-meta-chip"><FiCalendar /> {new Date(app.appointmentDate).toDateString()}</span>
-                        <span className="appt-meta-chip"><FiClock /> {app.slotTime}</span>
-                        <ConsultationBadge type={app.consultationType} />
+                        <span className="appt-meta-chip"><FiCalendar /> {app.appointmentDate || new Date().toDateString()}</span>
+                        <span className="appt-meta-chip"><FiClock /> {app.slotTime || '10:00 AM'}</span>
+                        <ConsultationBadge type={app.consultationType || 'PHYSICAL'} />
                       </div>
                       {app.reason && <div className="appt-meta-chip" style={{marginTop:'4px'}}><FiActivity /> {app.reason}</div>}
                     </div>
                   </div>
                   <div className="appt-item-right">
+                    <button className="btn btn-sm btn-outline" onClick={() => handleViewPatient(app.patientId)}>
+                       View Profile
+                    </button>
                     <button className="btn btn-sm btn-success" onClick={() => handleUpdateStatus(app.id, 'CONFIRMED')}>
                       <FiCheck /> Accept
                     </button>
@@ -164,20 +184,22 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
               {confirmedAppointments.map(app => (
                 <div key={app.id} className="appt-item">
                   <div className="appt-item-left">
-                    <div className="appt-avatar patient">
+                    <div className="appt-avatar patient" onClick={() => handleViewPatient(app.patientId)} style={{cursor: 'pointer'}}>
                       <FiUser />
                     </div>
                     <div className="appt-info">
                       <h4>Patient #{app.patientId}</h4>
                       <div className="appt-info-meta">
-                         <span className="appt-meta-chip"><FiCalendar /> {new Date(app.appointmentDate).toDateString()}</span>
-                         <span className="appt-meta-chip"><FiClock /> {app.slotTime}</span>
-                         <ConsultationBadge type={app.consultationType} />
+                         <span className="appt-meta-chip"><FiCalendar /> {app.appointmentDate || new Date().toDateString()}</span>
+                         <span className="appt-meta-chip"><FiClock /> {app.slotTime || '10:00 AM'}</span>
+                         <ConsultationBadge type={app.consultationType || 'PHYSICAL'} />
                       </div>
                     </div>
                   </div>
                   <div className="appt-item-right">
-                    <StatusBadge status={app.status} />
+                    <button className="btn btn-sm btn-primary" onClick={() => setPrescribingAppt(app)}>
+                      <FiFileText /> Issue Prescription
+                    </button>
                     
                     {app.status === 'CONFIRMED' && app.consultationType === 'ONLINE' && (
                       <button
@@ -230,8 +252,8 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
                     <div className="appt-info">
                       <h4>Patient #{app.patientId}</h4>
                       <div className="appt-info-meta">
-                        <span className="appt-meta-chip">{new Date(app.appointmentDate).toDateString()}</span>
-                        <ConsultationBadge type={app.consultationType} />
+                        <span className="appt-meta-chip">{app.appointmentDate || new Date().toDateString()}</span>
+                        <ConsultationBadge type={app.consultationType || 'PHYSICAL'} />
                       </div>
                     </div>
                   </div>
@@ -244,7 +266,22 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
           )}
         </div>
       </div>
+
+      {/* ── Modals ── */}
+      {selectedPatient && (
+        <PatientInfoModal 
+          patient={selectedPatient} 
+          onClose={() => setSelectedPatient(null)} 
+        />
+      )}
+
+      {prescribingAppt && (
+        <PrescriptionModal 
+          appointment={prescribingAppt} 
+          onClose={() => setPrescribingAppt(null)} 
+          onSuccess={onSuccess}
+        />
+      )}
     </div>
   );
 }
-

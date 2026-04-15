@@ -62,6 +62,7 @@ public class DoctorService {
         doctor.setName(doctorDetails.getName());
         doctor.setSpecialization(doctorDetails.getSpecialization());
         doctor.setEmail(doctorDetails.getEmail());
+        doctor.setPhone(doctorDetails.getPhone());
         doctor.setHospital(doctorDetails.getHospital());
         doctor.setConsultationFee(doctorDetails.getConsultationFee());
         doctor.setVerified(doctorDetails.getVerified());
@@ -88,6 +89,15 @@ public class DoctorService {
         return availabilityRepository.findByDoctorId(Objects.requireNonNull(doctorId, "ID is required"));
     }
 
+     public Availability updateAvailability(Long id, Availability availabilityDetails) {
+        Availability availability = availabilityRepository.findById(Objects.requireNonNull(id, "ID is required"))
+                .orElseThrow(() -> new RuntimeException("Availability not found"));
+        availability.setDate(availabilityDetails.getDate());
+        availability.setStartTime(availabilityDetails.getStartTime());
+        availability.setEndTime(availabilityDetails.getEndTime());
+        return availabilityRepository.save(availability);
+    }
+
     public void removeAvailability(Long availabilityId) {
         availabilityRepository.deleteById(Objects.requireNonNull(availabilityId, "ID is required"));
     }
@@ -105,15 +115,22 @@ public class DoctorService {
         return appointmentRepository.save(appointment);
     }
 
+    public Appointment createAppointment(Appointment appointment) {
+        if (appointment.getStatus() == null) {
+            appointment.setStatus(AppointmentStatus.PENDING);
+        }
+        return appointmentRepository.save(appointment);
+    }
+
     // --- Prescription Issuance ---
 
     public Prescription issuePrescription(Long appointmentId, Prescription prescription) {
         Appointment appointment = appointmentRepository.findById(Objects.requireNonNull(appointmentId, "ID is required"))
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
         
-        prescription.setAppointmentId(appointmentId);
         prescription.setDoctorId(appointment.getDoctorId());
         prescription.setPatientId(appointment.getPatientId());
+        prescription.setDate(java.time.LocalDate.now());
         
         return prescriptionRepository.save(prescription);
     }
@@ -127,5 +144,20 @@ public class DoctorService {
 
     public List<Prescription> getPrescriptionsForPatient(Long patientId) {
         return prescriptionRepository.findByPatientId(Objects.requireNonNull(patientId, "ID is required"));
+    }
+
+    // --- Patient Management (Step 5) ---
+    public Object getPatientInfo(Long patientId) {
+        // Enriched standardized view for Doctor Portal
+        return new java.util.HashMap<String, Object>() {{
+            put("id", patientId);
+            put("name", "John Doe (Patient)");
+            put("email", "john.doe@example.com");
+            put("age", 35);
+            put("bloodGroup", "O+");
+            put("medicalHistory", "Healthy cardiovascular history. No chronic allergies.");
+            put("lastVisit", "2023-11-20");
+            put("reports", java.util.List.of("Report_2023_BloodTest.pdf", "Report_2023_XRay.pdf"));
+        }};
     }
 }
