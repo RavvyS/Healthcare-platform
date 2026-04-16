@@ -31,9 +31,7 @@ public class DoctorController {
 
     @GetMapping("/doctors/{id}")
     public ResponseEntity<Doctor> viewDoctorProfile(@PathVariable Long id) {
-        return doctorService.getDoctorById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(doctorService.getOrCreateDoctor(id));
     }
 
     @PutMapping("/doctors/{id}")
@@ -44,6 +42,11 @@ public class DoctorController {
     @GetMapping("/doctors")
     public ResponseEntity<List<Doctor>> listAllDoctors() {
         return ResponseEntity.ok(doctorService.getAllDoctors());
+    }
+
+    @PatchMapping("/doctors/{id}/verify")
+    public ResponseEntity<Doctor> verifyDoctor(@PathVariable Long id, @RequestBody Boolean verified) {
+        return ResponseEntity.ok(doctorService.updateVerificationStatus(id, verified));
     }
 
     // --- 2. Availability Management ---

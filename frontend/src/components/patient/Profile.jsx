@@ -15,9 +15,9 @@ import ProfileForm from './ProfileForm';
  *   – Saves via PUT /api/patients/{id}/profile
  *   – Shows success / error banners inline
  */
-export default function Profile({ patientId, onSuccess }) {
+export default function Profile({ patientId, userEmail, onSuccess }) {
   const { profile, setProfile, loading, saving, error, saveProfile } =
-    usePatientProfile(patientId);
+    usePatientProfile(patientId, userEmail);
 
   const [editMode, setEditMode] = useState(false);
   const [draft,    setDraft]    = useState(null);

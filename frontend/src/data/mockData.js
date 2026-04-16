@@ -1,11 +1,11 @@
 // Mock doctors list - in production this comes from doctor-service
 export const MOCK_DOCTORS = [
-  { id: 1, name: 'Dr. Amal Perera',   specialization: 'Cardiology',     fee: 2500 },
-  { id: 2, name: 'Dr. Nimali Silva',  specialization: 'Neurology',      fee: 3000 },
-  { id: 3, name: 'Dr. Ruwan Jayawardena', specialization: 'Orthopedics', fee: 2000 },
-  { id: 4, name: 'Dr. Sachini Gunawardena', specialization: 'Pediatrics', fee: 1800 },
-  { id: 5, name: 'Dr. Chamara Fernando', specialization: 'Dermatology',  fee: 2200 },
-  { id: 6, name: 'Dr. Priya Wijesekara', specialization: 'General Physician', fee: 1500 },
+  { id: 1001, name: 'Dr. Amal Perera',   specialization: 'Cardiology',     consultationFee: 2500 },
+  { id: 1002, name: 'Dr. Nimali Silva',  specialization: 'Neurology',      consultationFee: 3000 },
+  { id: 1003, name: 'Dr. Ruwan Jayawardena', specialization: 'Orthopedics', consultationFee: 2000 },
+  { id: 1004, name: 'Dr. Sachini Gunawardena', specialization: 'Pediatrics', consultationFee: 1800 },
+  { id: 1005, name: 'Dr. Chamara Fernando', specialization: 'Dermatology',  consultationFee: 2200 },
+  { id: 1006, name: 'Dr. Priya Wijesekara', specialization: 'General Physician', consultationFee: 1500 },
 ];
 
 export const TIME_SLOTS = [

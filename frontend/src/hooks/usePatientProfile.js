@@ -6,8 +6,9 @@ import { getProfile, updateProfile } from '../api/patientApi';
  * Manages fetching and updating a patient profile.
  *
  * @param {string|number} patientId  — replace with JWT-decoded ID in production
+ * @param {string} userEmail — Email from login session
  */
-export function usePatientProfile(patientId) {
+export function usePatientProfile(patientId, userEmail) {
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [saving,  setSaving]    = useState(false);
@@ -20,6 +21,12 @@ export function usePatientProfile(patientId) {
     setError(null);
     try {
       const data = await getProfile(patientId);
+      
+      // Auto-fetch email from login context if not in profile
+      if (!data.email && userEmail) {
+        data.email = userEmail;
+      }
+      
       setProfile(data);
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to load patient profile');

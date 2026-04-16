@@ -24,24 +24,17 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: healthcare-platform-config
-                  key: POSTGRES_USER
+                  key: SPRING_DATASOURCE_USERNAME
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
-                configMapKeyRef:
-                  name: healthcare-platform-config
-                  key: POSTGRES_PASSWORD
+                secretKeyRef:
+                  name: healthcare-platform-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-              value: update
-            - name: PAYHERE_MERCHANT_ID
               valueFrom:
                 configMapKeyRef:
                   name: healthcare-platform-config
-                  key: PAYHERE_MERCHANT_ID
-            - name: PAYHERE_MERCHANT_SECRET
-              valueFrom:
-                configMapKeyRef:
-                  name: healthcare-platform-config
-                  key: PAYHERE_MERCHANT_SECRET
+                  key: SPRING_JPA_HIBERNATE_DDL_AUTO
 ---
 apiVersion: v1
 kind: Service

@@ -45,7 +45,7 @@ const MEDICAL_SPECIALIZATIONS = [
   'Sports Medicine'
 ];
 
-export default function DoctorProfile({ doctorId, onSuccess }) {
+export default function DoctorProfile({ doctorId, user, onSuccess }) {
   const [profile, setProfile] = useState(initialProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,7 +55,13 @@ export default function DoctorProfile({ doctorId, onSuccess }) {
       setLoading(true);
       try {
         const data = await getDoctorById(doctorId);
-        setProfile({ ...initialProfile, ...data });
+        
+        // Pre-fill name and email from login session if missing in data
+        const mergedProfile = { ...initialProfile, ...data };
+        if (!mergedProfile.name && user?.fullName) mergedProfile.name = user.fullName;
+        if (!mergedProfile.email && user?.email) mergedProfile.email = user.email;
+        
+        setProfile(mergedProfile);
       } catch {
         onSuccess('Failed to load doctor profile', 'error');
       } finally {

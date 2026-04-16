@@ -62,6 +62,6 @@ export const updateAppointmentStatus = async (id, status) => {
 };
 
 export const cancelAppointment = async (id) => {
-  const res = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE_URL}/${id}/cancel`, { method: 'PUT' });
   if (!res.ok) throw new Error('Failed to cancel appointment');
 };

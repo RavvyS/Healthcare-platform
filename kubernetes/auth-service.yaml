@@ -24,14 +24,22 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: healthcare-platform-config
-                  key: POSTGRES_USER
+                  key: SPRING_DATASOURCE_USERNAME
             - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-platform-secrets
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               valueFrom:
                 configMapKeyRef:
                   name: healthcare-platform-config
-                  key: POSTGRES_PASSWORD
-            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-              value: update
+                  key: SPRING_JPA_HIBERNATE_DDL_AUTO
+            - name: SPRING_JPA_GENERATE_DDL
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-platform-config
+                  key: SPRING_JPA_GENERATE_DDL
 ---
 apiVersion: v1
 kind: Service

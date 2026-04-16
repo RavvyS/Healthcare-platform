@@ -17,6 +17,17 @@ spec:
           image: healthcare/notification-service:latest
           ports:
             - containerPort: 8088
+          env:
+            - name: SPRING_MAIL_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-platform-config
+                  key: SPRING_MAIL_USERNAME
+            - name: SPRING_MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthcare-platform-secrets
+                  key: SPRING_MAIL_PASSWORD
 ---
 apiVersion: v1
 kind: Service
