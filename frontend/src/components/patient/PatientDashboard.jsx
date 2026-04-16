@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react';
 import { FiActivity, FiCalendar, FiClock, FiFileText, FiShield } from 'react-icons/fi';
 import { getPatientAppointments } from '../../api/appointmentApi';
 import { getPatientReports } from '../../api/patientApi';
-import { getPatientPrescriptions } from '../../api/doctorApi';
+import { getPatientPrescriptions, getDoctors } from '../../api/doctorApi';
 import { EmptyState, Loading, StatusBadge } from '../common/UI';
-import { MOCK_DOCTORS } from '../../data/mockData';
 
 export default function PatientDashboard({ patientId, onSuccess }) {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState([]);
   const [reports, setReports] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [doctors, setDoctors] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -20,10 +20,12 @@ export default function PatientDashboard({ patientId, onSuccess }) {
           getPatientAppointments(patientId),
           getPatientReports(patientId).catch(() => []),
           getPatientPrescriptions(patientId).catch(() => []),
+          getDoctors().catch(() => []),
         ]);
         setAppointments(appointmentData);
         setReports(reportData);
         setPrescriptions(prescriptionData);
+        setDoctors(doctorData);
       } catch {
         onSuccess('Failed to load patient dashboard', 'error');
       } finally {
@@ -64,7 +66,7 @@ export default function PatientDashboard({ patientId, onSuccess }) {
           {nextAppointment ? (
             <>
               <div className="hero-mini-title">
-                {MOCK_DOCTORS.find((doctor) => doctor.id === nextAppointment.doctorId)?.name || `Doctor #${nextAppointment.doctorId}`}
+                  {doctors.find((doctor) => doctor.id === nextAppointment.doctorId)?.name || `Doctor #${nextAppointment.doctorId}`}
               </div>
               <div className="hero-mini-meta">
                 <span><FiCalendar /> {new Date(nextAppointment.appointmentDate).toDateString()}</span>
@@ -109,7 +111,7 @@ export default function PatientDashboard({ patientId, onSuccess }) {
                 {upcoming.slice(0, 4).map((appointment) => (
                   <div className="compact-list-item" key={appointment.id}>
                     <div>
-                      <strong>{MOCK_DOCTORS.find((doctor) => doctor.id === appointment.doctorId)?.name || `Doctor #${appointment.doctorId}`}</strong>
+                          <strong>{doctors.find((doctor) => doctor.id === appointment.doctorId)?.name || `Doctor #${appointment.doctorId}`}</strong>
                       <span>{new Date(appointment.appointmentDate).toDateString()} at {appointment.slotTime}</span>
                     </div>
                     <StatusBadge status={appointment.status} />

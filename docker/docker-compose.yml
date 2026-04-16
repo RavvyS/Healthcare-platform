@@ -105,6 +105,8 @@ services:
     container_name: ai-symptom-service
     ports:
       - "8087:8087"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     networks:
       - healthcare-network
 

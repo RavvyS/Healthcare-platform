@@ -3,13 +3,15 @@ import { FiCalendar, FiVideo, FiActivity, FiArrowRight, FiShield, FiFileText, Fi
 import { RiHospitalLine } from 'react-icons/ri';
 import { ThemeToggle } from './UI';
 
+import SymptomChecker from '../patient/SymptomChecker';
+
 export default function HomePage({ onGetStarted, theme, toggleTheme }) {
   const [activeSection, setActiveSection] = useState('home');
 
   // Sync scroll position to active section
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'features', 'about', 'testimonials', 'contact'];
+      const sections = ['home', 'features', 'ai-demo', 'about', 'testimonials', 'contact'];
       let current = 'home';
       for (const section of sections) {
         const element = document.getElementById(section);
@@ -84,6 +86,10 @@ export default function HomePage({ onGetStarted, theme, toggleTheme }) {
           <span style={navLinkStyle('features')} onClick={() => scrollTo('features')}>
             Features
             <div style={getUnderlineStyle('features')} />
+          </span>
+          <span style={navLinkStyle('ai-demo')} onClick={() => scrollTo('ai-demo')}>
+            AI Checker
+            <div style={getUnderlineStyle('ai-demo')} />
           </span>
           <span style={navLinkStyle('about')} onClick={() => scrollTo('about')}>
             About Us
@@ -166,6 +172,18 @@ export default function HomePage({ onGetStarted, theme, toggleTheme }) {
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>Digital Prescriptions</h3>
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>Receive instantly issued digital prescriptions from your doctors and securely maintain a lifelong digital health record.</p>
             </div>
+          </div>
+        </section>
+
+        {/* AI SYMPTOM CHECKER DEMO */}
+        <section id="ai-demo" style={{ padding: '40px 20px 80px', maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div className="hero-mini-label" style={{ display: 'inline-block', marginBottom: '16px', background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899' }}>Live Interactive Demo</div>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>AI Symptom Triage</h2>
+            <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Describe your symptoms naturally below and let our Gemini-powered intelligent engine guide your next steps.</p>
+          </div>
+          <div style={{ boxShadow: '0 20px 40px -15px rgba(0,0,0,0.1)', borderRadius: '24px', overflow: 'hidden' }}>
+            <SymptomChecker onSuccess={(msg) => console.log(msg)} />
           </div>
         </section>
 

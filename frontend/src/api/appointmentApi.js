@@ -43,8 +43,7 @@ export const getPatientAppointments = async (patientId) => {
 };
 
 export const getDoctorAppointments = async (doctorId) => {
-  // Redirected to standalone Doctor Service
-  const res = await fetch(`${DOCTOR_SERVICE_URL}/doctors/${doctorId}/appointments`);
+  const res = await fetch(`${BASE_URL}/doctor/${doctorId}`);
   if (!res.ok) throw new Error('Failed to fetch appointments');
   return res.json();
 };
@@ -53,9 +52,8 @@ export const updateAppointmentStatus = async (id, status) => {
   // Mapping UI 'CONFIRMED' to Backend 'ACCEPTED' for assignment compliance
   const backendStatus = status === 'CONFIRMED' ? 'ACCEPTED' : status;
   
-  // Redirected to standalone Doctor Service
-  const res = await fetch(`${DOCTOR_SERVICE_URL}/appointments/${id}/status?status=${backendStatus}`, {
-    method: 'PUT',
+  const res = await fetch(`${BASE_URL}/${id}/status?status=${backendStatus}`, {
+    method: 'PATCH',
   });
   if (!res.ok) throw new Error('Failed to update status');
   return res.json();
