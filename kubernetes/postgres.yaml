@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthcare-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthcare-db
+  template:
+    metadata:
+      labels:
+        app: healthcare-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: healthcare-platform-config
+          env:
+            - name: POSTGRES_DB
+              value: postgres
+          volumeMounts:
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: postgres-init
+          configMap:
+            name: healthcare-db-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthcare-db
+spec:
+  selector:
+    app: healthcare-db
+  ports:
+    - port: 5432
+      targetPort: 5432

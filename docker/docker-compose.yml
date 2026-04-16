@@ -1,0 +1,110 @@
+services:
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_GENERATE_DDL=true
+
+  doctor-service:
+    build:
+      context: ../services/doctor-service
+      dockerfile: Dockerfile
+    container_name: doctor-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_GENERATE_DDL=true
+
+  appointment-service:
+    build:
+      context: ../services/appointment-service
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_GENERATE_DDL=true
+
+  payment-service:
+    build:
+      context: ../services/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - PAYHERE_MERCHANT_ID=1232121
+      - PAYHERE_MERCHANT_SECRET=MTM2ODU5NDI3NjE0MjUxMzU0NDg1MDk1OTEyNDgzOTcyMzA3ODQw
+
+  patient-service:
+    build:
+      context: ../services/patient-service
+      dockerfile: Dockerfile
+    container_name: patient-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=neondb_owner
+      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_GENERATE_DDL=true
+
+  ai-symptom-service:
+    build:
+      context: ../services/ai-symptom-service
+      dockerfile: Dockerfile
+    container_name: ai-symptom-service
+    ports:
+      - "8087:8087"
+
+  notification-service:
+    build:
+      context: ../services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8088:8088"
+
+  telemedicine-service:
+    build:
+      context: ../services/telemedicine-service
+      dockerfile: Dockerfile
+    container_name: telemedicine-service
+    ports:
+      - "8085:8085"
+    environment:
+      - JITSI_ROOM_SECRET=ravvycare-secure-secret-2026
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: healthcare-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - auth-service
+      - doctor-service
+      - appointment-service
+      - payment-service
+      - patient-service
+      - ai-symptom-service
+      - notification-service
+      - telemedicine-service

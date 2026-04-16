@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemedicine-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemedicine-service
+  template:
+    metadata:
+      labels:
+        app: telemedicine-service
+    spec:
+      containers:
+        - name: telemedicine-service
+          image: healthcare/telemedicine-service:latest
+          ports:
+            - containerPort: 8085
+          env:
+            - name: JITSI_ROOM_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: healthcare-platform-config
+                  key: JITSI_ROOM_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telemedicine-service
+spec:
+  selector:
+    app: telemedicine-service
+  ports:
+    - port: 8085
+      targetPort: 8085
