@@ -14,7 +14,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [doctors, setDoctors] = useState(MOCK_DOCTORS);
+  const [doctors, setDoctors] = useState([]); // Start empty to avoid collisions
 
   useEffect(() => {
     if (form.doctorId && form.appointmentDate) {
@@ -27,13 +27,14 @@ export default function BookAppointment({ patientId, onSuccess }) {
   useEffect(() => {
     getDoctors()
       .then((data) => {
-        const verifiedDoctors = data.filter((doctor) => doctor.verified !== false);
-        setDoctors(verifiedDoctors.length ? verifiedDoctors : data);
+        // Show all doctors who have completed their basic profile (name and specialization)
+        const activeDoctors = data.filter((doctor) => doctor.name && doctor.specialization);
+        setDoctors(activeDoctors.length ? activeDoctors : data);
       })
       .catch(() => setDoctors(MOCK_DOCTORS));
   }, []);
 
-  const selectedDoctor = doctors.find(d => d.id === Number(form.doctorId)) || MOCK_DOCTORS.find(d => d.id === Number(form.doctorId));
+  const selectedDoctor = doctors.find(d => d.id === Number(form.doctorId));
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -43,7 +44,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
     setLoading(true);
     try {
       const dateTime = new Date(form.appointmentDate + 'T' + form.slotTime.split(' ')[0]).toISOString();
-      const fee = selectedDoctor ? selectedDoctor.fee : 1500;
+      const fee = selectedDoctor ? (selectedDoctor.consultationFee || 1500) : 1500;
       
       const initData = await initPayment({
         patientId,
@@ -222,7 +223,7 @@ export default function BookAppointment({ patientId, onSuccess }) {
                 </p>
               </div>
               <div className="fee-chip">
-                 LKR {selectedDoctor.fee.toLocaleString()}
+                 LKR {(selectedDoctor.consultationFee || 0).toLocaleString()}
               </div>
             </div>
           )}

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-@Configuration
+// @Configuration // Disabled since mock data is manually initialized and ID auto-gen is removed
 public class DataSeeder {
 
     @SuppressWarnings("null")

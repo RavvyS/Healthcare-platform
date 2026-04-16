@@ -1,4 +1,18 @@
 services:
+  healthcare-db:
+    image: postgres:15
+    container_name: healthcare-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - healthcare-network
+
   auth-service:
     build:
       context: ../services/auth-service
@@ -7,11 +21,15 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=neondb_owner
-      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/auth_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_GENERATE_DDL=true
+    depends_on:
+      - healthcare-db
+    networks:
+      - healthcare-network
 
   doctor-service:
     build:
@@ -21,11 +39,15 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=neondb_owner
-      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/doctor_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_GENERATE_DDL=true
+    depends_on:
+      - healthcare-db
+    networks:
+      - healthcare-network
 
   appointment-service:
     build:
@@ -35,11 +57,15 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=neondb_owner
-      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/appointment_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_GENERATE_DDL=true
+    depends_on:
+      - healthcare-db
+    networks:
+      - healthcare-network
 
   payment-service:
     build:
@@ -51,6 +77,8 @@ services:
     environment:
       - PAYHERE_MERCHANT_ID=1232121
       - PAYHERE_MERCHANT_SECRET=MTM2ODU5NDI3NjE0MjUxMzU0NDg1MDk1OTEyNDgzOTcyMzA3ODQw
+    networks:
+      - healthcare-network
 
   patient-service:
     build:
@@ -60,11 +88,15 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://ep-icy-breeze-a8i4gd46-pooler.eastus2.azure.neon.tech/DS?sslmode=require
-      - SPRING_DATASOURCE_USERNAME=neondb_owner
-      - SPRING_DATASOURCE_PASSWORD=npg_d7xtQKmVg8LW
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://healthcare-db:5432/patient_service_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_GENERATE_DDL=true
+    depends_on:
+      - healthcare-db
+    networks:
+      - healthcare-network
 
   ai-symptom-service:
     build:
@@ -73,6 +105,10 @@ services:
     container_name: ai-symptom-service
     ports:
       - "8087:8087"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - healthcare-network
 
   notification-service:
     build:
@@ -81,6 +117,11 @@ services:
     container_name: notification-service
     ports:
       - "8088:8088"
+    environment:
+      - SPRING_MAIL_USERNAME=ravindusdc@gmail.com
+      - SPRING_MAIL_PASSWORD=mgydecamqrbefglb
+    networks:
+      - healthcare-network
 
   telemedicine-service:
     build:
@@ -91,6 +132,8 @@ services:
       - "8085:8085"
     environment:
       - JITSI_ROOM_SECRET=ravvycare-secure-secret-2026
+    networks:
+      - healthcare-network
 
   frontend:
     build:
@@ -108,3 +151,12 @@ services:
       - ai-symptom-service
       - notification-service
       - telemedicine-service
+    networks:
+      - healthcare-network
+
+networks:
+  healthcare-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

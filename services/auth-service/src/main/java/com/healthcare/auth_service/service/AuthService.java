@@ -22,12 +22,15 @@ public class AuthService {
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
     private final NotificationClient notificationClient;
+    private final com.healthcare.auth_service.client.DoctorClient doctorClient;
 
-    public AuthService(UserRepository repository, PasswordEncoder encoder, JwtService jwtService, NotificationClient notificationClient) {
+    public AuthService(UserRepository repository, PasswordEncoder encoder, JwtService jwtService, 
+                       NotificationClient notificationClient, com.healthcare.auth_service.client.DoctorClient doctorClient) {
         this.repository = repository;
         this.encoder = encoder;
         this.jwtService = jwtService;
         this.notificationClient = notificationClient;
+        this.doctorClient = doctorClient;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -132,6 +135,11 @@ public class AuthService {
                     "Login here: http://localhost:5173\n\n" +
                     "Best regards,\nMediCare Team"
             );
+
+            // Sync verification to doctor-service if user is a Doctor
+            if (user.getRole() == com.healthcare.auth_service.entity.Role.DOCTOR) {
+                doctorClient.verifyDoctor(user.getId(), true);
+            }
         }
 
         // Send email when account is suspended

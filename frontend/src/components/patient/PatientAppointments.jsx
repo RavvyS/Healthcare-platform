@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiVideo, FiMapPin, FiX, FiInfo, FiInbox } from 'react-icons/fi';
 import { getPatientAppointments, cancelAppointment } from '../../api/appointmentApi';
+import { getDoctors } from '../../api/doctorApi';
 import { StatusBadge, Loading, EmptyState, ConsultationBadge } from '../common/UI';
 import { MOCK_DOCTORS } from '../../data/mockData';
 
 export default function PatientAppointments({ patientId, refreshTrigger, onSuccess }) {
   const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getDoctors().then(setDoctors).catch(console.error);
+  }, []);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -66,7 +72,7 @@ export default function PatientAppointments({ patientId, refreshTrigger, onSucce
           ) : (
             <div className="appointment-list">
               {activeAppointments.map(app => {
-                const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
+                const doctor = doctors.find(d => d.id === app.doctorId) || MOCK_DOCTORS.find(d => d.id === app.doctorId);
                 return (
                   <div key={app.id} className="appt-item">
                     <div className="appt-item-left">
@@ -143,7 +149,7 @@ export default function PatientAppointments({ patientId, refreshTrigger, onSucce
           ) : (
             <div className="appointment-list">
               {pastAppointments.map(app => {
-                const doctor = MOCK_DOCTORS.find(d => d.id === app.doctorId);
+                const doctor = doctors.find(d => d.id === app.doctorId) || MOCK_DOCTORS.find(d => d.id === app.doctorId);
                 return (
                   <div key={app.id} className="appt-item" style={{ opacity: 0.8 }}>
                     <div className="appt-item-left">

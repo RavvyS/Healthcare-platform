@@ -1,12 +1,5 @@
 // Mock doctors list - in production this comes from doctor-service
-export const MOCK_DOCTORS = [
-  { id: 1, name: 'Dr. Amal Perera',   specialization: 'Cardiology',     fee: 2500 },
-  { id: 2, name: 'Dr. Nimali Silva',  specialization: 'Neurology',      fee: 3000 },
-  { id: 3, name: 'Dr. Ruwan Jayawardena', specialization: 'Orthopedics', fee: 2000 },
-  { id: 4, name: 'Dr. Sachini Gunawardena', specialization: 'Pediatrics', fee: 1800 },
-  { id: 5, name: 'Dr. Chamara Fernando', specialization: 'Dermatology',  fee: 2200 },
-  { id: 6, name: 'Dr. Priya Wijesekara', specialization: 'General Physician', fee: 1500 },
-];
+export const MOCK_DOCTORS = [];
 
 export const TIME_SLOTS = [
   '08:00 AM - 08:30 AM', '08:30 AM - 09:00 AM',
