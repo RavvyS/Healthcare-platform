@@ -31,25 +31,43 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already in use. Please use a different email or log in.");
+        }
+        
+        boolean isAdmin = request.getRole() == Role.ADMIN;
+        
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .password(encoder.encode(request.getPassword()))
                 .role(request.getRole())
-                .accountStatus(AccountStatus.PENDING_VERIFICATION)
+                .accountStatus(isAdmin ? AccountStatus.ACTIVE : AccountStatus.PENDING_VERIFICATION)
                 .build();
 
         repository.save(user);
 
-        // Send registration pending email
-        notificationClient.sendEmail(
-                user.getEmail(),
-                "Registration Received - MediCare",
-                "Hello " + user.getFullName() + ",\n\n" +
-                "Thank you for registering at MediCare. Your account is currently pending review.\n\n" +
-                "An administrator will verify your account shortly. You will receive another email once your account is approved and ready for login.\n\n" +
-                "Best regards,\nMediCare Team"
-        );
+        if (isAdmin) {
+            // Send direct welcome email for Admin
+            notificationClient.sendEmail(
+                    user.getEmail(),
+                    "Welcome to MediCare Admin Team",
+                    "Hello " + user.getFullName() + ",\n\n" +
+                    "Your administrator account has been created successfully. You can now log in and access the dashboard.\n\n" +
+                    "Login here: http://localhost:5173\n\n" +
+                    "Best regards,\nMediCare Team"
+            );
+        } else {
+            // Send registration pending email for Patients and Doctors
+            notificationClient.sendEmail(
+                    user.getEmail(),
+                    "Registration Received - MediCare",
+                    "Hello " + user.getFullName() + ",\n\n" +
+                    "Thank you for registering at MediCare. Your account is currently pending review.\n\n" +
+                    "An administrator will verify your account shortly. You will receive another email once your account is approved and ready for login.\n\n" +
+                    "Best regards,\nMediCare Team"
+            );
+        }
 
         String token = jwtService.generateToken(user.getEmail());
         return toAuthResponse(user, token);

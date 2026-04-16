@@ -67,54 +67,77 @@ export default function AdminDashboard({ onSuccess }) {
     { label: 'Total Users', value: stats?.totalUsers ?? 0, icon: <FiUsers /> },
     { label: 'Doctors', value: stats?.doctorCount ?? 0, icon: <FiUserCheck /> },
     { label: 'Active Accounts', value: stats?.activeCount ?? 0, icon: <FiCheckCircle /> },
-    { label: 'Pending Verification', value: stats?.pendingVerificationCount ?? 0, icon: <FiShield /> },
+    { label: 'Pending Verification', value: stats?.pendingVerificationCount ?? 0, icon: <FiShield />, color: '#f59e0b' },
   ];
+
+  const pendingUsers = users.filter(u => u.accountStatus === 'PENDING_VERIFICATION');
+  const managedUsers = users.filter(u => u.accountStatus !== 'PENDING_VERIFICATION');
 
   return (
     <div className="section-gap">
       <div className="stats-grid">
         {statCards.map((card) => (
-          <div className="stat-card" key={card.label}>
-            <div className="stat-icon">{card.icon}</div>
+          <div className="stat-card" key={card.label} style={card.color ? { borderColor: card.color } : {}}>
+            <div className="stat-icon" style={card.color ? { color: card.color } : {}}>{card.icon}</div>
             <div className="stat-label">{card.label}</div>
             <div className="stat-value">{card.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="card">
+      {/* --- SECTION 1: VERIFICATION REQUESTS --- */}
+      <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
         <div className="card-header">
           <div className="card-header-left">
             <div className="card-header-icon amber">
               <FiShield />
             </div>
             <div>
-              <h3>User Accounts</h3>
-              <p>Activate, suspend, and oversee platform identities</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h3 style={{ margin: 0 }}>Verification Requests</h3>
+                {pendingUsers.length > 0 && (
+                  <span className="badge badge-warning">{pendingUsers.length} Pending</span>
+                )}
+              </div>
+              <p>Approve new registrations for Doctors and Patients</p>
             </div>
           </div>
         </div>
         <div className="card-body">
-          {users.length === 0 ? (
-            <EmptyState title="No users found" subtitle="Registered users will appear here." />
+          {pendingUsers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
+              <FiCheckCircle size={32} style={{ marginBottom: 10, color: '#10b981' }} />
+              <p>All clear! No employee or patient registrations are pending verification.</p>
+            </div>
           ) : (
             <div className="appointment-list">
-              {users.map((user) => (
-                <div className="appt-item" key={user.id}>
+              {pendingUsers.map((user) => (
+                <div className="appt-item" key={user.id} style={{ borderLeft: user.role === 'DOCTOR' ? '3px solid #6366f1' : 'none' }}>
                   <div className="appt-item-left">
-                    <div className="appt-avatar doctor">{user.fullName?.[0] || 'U'}</div>
+                    <div className={`appt-avatar ${user.role === 'DOCTOR' ? 'doctor' : 'patient'}`}>
+                      {user.role === 'DOCTOR' ? <FiUserCheck /> : <FiUsers />}
+                    </div>
                     <div className="appt-info">
-                      <h4>{user.fullName || user.email}</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <h4>{user.fullName || user.email}</h4>
+                        <span className={`badge ${user.role === 'DOCTOR' ? 'badge-primary' : 'badge-ghost'}`} style={{ fontSize: '0.7rem' }}>
+                          {user.role}
+                        </span>
+                      </div>
                       <div className="appt-info-meta">
                         <span className="appt-meta-chip">{user.email}</span>
-                        <span className="appt-meta-chip">{user.role}</span>
-                        <span className="appt-meta-chip">{user.accountStatus}</span>
+                        <span className="appt-meta-chip text-warning">Waiting for Approval</span>
                       </div>
                     </div>
                   </div>
                   <div className="appt-item-right">
-                    <button className="btn btn-sm btn-success" onClick={() => handleUserStatus(user.id, 'ACTIVE')}>Activate</button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleUserStatus(user.id, 'SUSPENDED')}>Suspend</button>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ padding: '8px 20px' }}
+                      onClick={() => handleUserStatus(user.id, 'ACTIVE')}
+                    >
+                      Approve Account
+                    </button>
                   </div>
                 </div>
               ))}
@@ -123,6 +146,56 @@ export default function AdminDashboard({ onSuccess }) {
         </div>
       </div>
 
+      {/* --- SECTION 2: USER MANAGEMENT --- */}
+      <div className="card">
+        <div className="card-header">
+          <div className="card-header-left">
+            <div className="card-header-icon indigo">
+              <FiUsers />
+            </div>
+            <div>
+              <h3>User Management</h3>
+              <p>Manage existing active and suspended accounts</p>
+            </div>
+          </div>
+        </div>
+        <div className="card-body">
+          {managedUsers.length === 0 ? (
+            <EmptyState title="No active users" subtitle="Registered and approved users will appear here." />
+          ) : (
+            <div className="appointment-list">
+              {managedUsers.map((user) => (
+                <div className="appt-item" key={user.id}>
+                  <div className="appt-item-left">
+                    <div className={`appt-avatar ${user.role === 'DOCTOR' ? 'doctor' : 'patient'}`}>
+                      {user.fullName?.[0] || 'U'}
+                    </div>
+                    <div className="appt-info">
+                      <h4>{user.fullName || user.email}</h4>
+                      <div className="appt-info-meta">
+                        <span className="appt-meta-chip">{user.email}</span>
+                        <span className="appt-meta-chip">{user.role}</span>
+                        <span className={`appt-meta-chip ${user.accountStatus === 'ACTIVE' ? 'text-success' : 'text-danger'}`}>
+                          {user.accountStatus}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="appt-item-right">
+                    {user.accountStatus === 'ACTIVE' ? (
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleUserStatus(user.id, 'SUSPENDED')}>Suspend</button>
+                    ) : (
+                      <button className="btn btn-sm btn-success" onClick={() => handleUserStatus(user.id, 'ACTIVE')}>Reactivate</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* --- SECTION 3: DOCTOR PROFILE VERIFICATION (SYSTEM READINESS) --- */}
       <div className="card">
         <div className="card-header">
           <div className="card-header-left">
@@ -130,14 +203,14 @@ export default function AdminDashboard({ onSuccess }) {
               <FiActivity />
             </div>
             <div>
-              <h3>Doctor Verification</h3>
-              <p>Approve registrations and check consultation readiness</p>
+              <h3>Doctor System Readiness</h3>
+              <p>Verify clinical profiles and consultation settings</p>
             </div>
           </div>
         </div>
         <div className="card-body">
           {doctors.length === 0 ? (
-            <EmptyState title="No doctors found" subtitle="Doctor registrations will appear here." />
+            <EmptyState title="No doctor profiles" subtitle="Approved doctor clinical data will appear here." />
           ) : (
             <div className="appointment-list">
               {doctors.map((doctor) => (
@@ -149,13 +222,18 @@ export default function AdminDashboard({ onSuccess }) {
                       <div className="appt-info-meta">
                         <span className="appt-meta-chip">{doctor.specialization}</span>
                         <span className="appt-meta-chip">{doctor.hospital}</span>
-                        <span className="appt-meta-chip">{doctor.verified ? 'Verified' : 'Pending'}</span>
+                        <span className={`appt-meta-chip ${doctor.verified ? 'text-success' : 'text-warning'}`}>
+                          {doctor.verified ? 'Profile Verified' : 'Profile Pending'}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="appt-item-right">
-                    <button className="btn btn-sm btn-success" onClick={() => handleDoctorVerification(doctor.id, true)}>Verify</button>
-                    <button className="btn btn-sm btn-ghost" onClick={() => handleDoctorVerification(doctor.id, false)}>Mark Pending</button>
+                    {!doctor.verified ? (
+                      <button className="btn btn-sm btn-success" onClick={() => handleDoctorVerification(doctor.id, true)}>Verify Profile</button>
+                    ) : (
+                      <button className="btn btn-sm btn-ghost" onClick={() => handleDoctorVerification(doctor.id, false)}>Mark Pending</button>
+                    )}
                   </div>
                 </div>
               ))}
