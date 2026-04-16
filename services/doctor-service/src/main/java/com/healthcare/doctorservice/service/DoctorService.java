@@ -55,10 +55,23 @@ public class DoctorService {
         return doctorRepository.findById(Objects.requireNonNull(id, "ID is required"));
     }
 
+    public Doctor getOrCreateDoctor(Long id) {
+        return doctorRepository.findById(Objects.requireNonNull(id, "ID is required"))
+                .orElseGet(() -> {
+                    Doctor shell = new Doctor();
+                    shell.setId(id);
+                    shell.setVerified(false);
+                    return shell;
+                });
+    }
+
     public Doctor updateDoctor(Long id, Doctor doctorDetails) {
         Doctor doctor = doctorRepository.findById(Objects.requireNonNull(id, "ID is required"))
-                .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + id));
-        
+                .orElseGet(() -> {
+                    Doctor shell = new Doctor();
+                    shell.setId(id);
+                    return shell;
+                });
         doctor.setName(doctorDetails.getName());
         doctor.setSpecialization(doctorDetails.getSpecialization());
         doctor.setEmail(doctorDetails.getEmail());

@@ -79,9 +79,9 @@ function App() {
     localStorage.setItem('medicare_show_auth', showAuth);
   }, [showAuth]);
 
-  const PATIENT_ID = user?.userId?.toString() || '';
-  const ADMIN_ID = user?.userId || '';
-  const DOCTOR_ID = user?.userId || '';
+  const PATIENT_ID = user?.userId != null ? user.userId.toString() : '';
+  const ADMIN_ID = user?.userId != null ? user.userId : '';
+  const DOCTOR_ID = user?.userId != null ? user.userId : '';
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -271,11 +271,11 @@ function App() {
         )}
 
         {role === 'PATIENT' && activeTab === 'RECORDS' && (
-          <PatientRecords patientId={PATIENT_ID} onSuccess={addToast} />
+          <PatientRecords patientId={PATIENT_ID} userEmail={user?.email} onSuccess={addToast} />
         )}
 
         {role === 'PATIENT' && activeTab === 'PROFILE' && (
-          <Profile patientId={PATIENT_ID} onSuccess={addToast} />
+          <Profile patientId={PATIENT_ID} userEmail={user?.email} onSuccess={addToast} />
         )}
 
         {role === 'PATIENT' && activeTab === 'REPORTS' && (
@@ -301,6 +301,7 @@ function App() {
         {role === 'DOCTOR' && activeTab === 'PROFILE' && (
           <DoctorProfile 
             doctorId={DOCTOR_ID} 
+            user={user}
             onSuccess={(msg, type) => {
               addToast(msg, type);
               if (type !== 'error') setRefreshTrigger(prev => prev + 1);

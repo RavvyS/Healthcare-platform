@@ -25,8 +25,8 @@ spec:
                   key: PAYHERE_MERCHANT_ID
             - name: PAYHERE_MERCHANT_SECRET
               valueFrom:
-                configMapKeyRef:
-                  name: healthcare-platform-config
+                secretKeyRef:
+                  name: healthcare-platform-secrets
                   key: PAYHERE_MERCHANT_SECRET
 ---
 apiVersion: v1

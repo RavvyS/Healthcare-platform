@@ -27,7 +27,7 @@ const emptyReport = {
   documentUrl: '',
 };
 
-export default function PatientRecords({ patientId, onSuccess }) {
+export default function PatientRecords({ patientId, userEmail, onSuccess }) {
   const [profile, setProfile] = useState(emptyProfile);
   const [reportForm, setReportForm] = useState(emptyReport);
   const [reports, setReports] = useState([]);
@@ -45,6 +45,12 @@ export default function PatientRecords({ patientId, onSuccess }) {
           getPatientReports(patientId),
           getPatientPrescriptions(patientId).catch(() => []),
         ]);
+        
+        // Pre-fill email from login session if profile one is missing
+        if (!profileData.email && userEmail) {
+          profileData.email = userEmail;
+        }
+        
         setProfile(profileData);
         setReports(reportData);
         setPrescriptions(prescriptionData);
