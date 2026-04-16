@@ -92,8 +92,7 @@ public class DoctorService {
     // --- Availability Management ---
 
     public Availability addAvailability(Long doctorId, Availability availability) {
-        Doctor doctor = doctorRepository.findById(Objects.requireNonNull(doctorId, "ID is required"))
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        Doctor doctor = getOrCreateDoctor(Objects.requireNonNull(doctorId, "ID is required"));
         availability.setDoctor(doctor);
         return availabilityRepository.save(availability);
     }
