@@ -52,7 +52,7 @@ export default function DoctorAppointments({ doctorId, onSuccess }) {
         });
       }
       onSuccess(`Appointment marked as ${status}`, 'success');
-      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: status === 'ACCEPTED' ? 'ACCEPTED' : (status === 'CONFIRMED' ? 'ACCEPTED' : status) } : a));
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
       fetchAppointments();
     } catch {
       onSuccess('Failed to update status', 'error');

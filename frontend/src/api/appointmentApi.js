@@ -49,10 +49,7 @@ export const getDoctorAppointments = async (doctorId) => {
 };
 
 export const updateAppointmentStatus = async (id, status) => {
-  // Mapping UI 'CONFIRMED' to Backend 'ACCEPTED' for assignment compliance
-  const backendStatus = status === 'CONFIRMED' ? 'ACCEPTED' : status;
-  
-  const res = await fetch(`${BASE_URL}/${id}/status?status=${backendStatus}`, {
+  const res = await fetch(`${BASE_URL}/${id}/status?status=${status}`, {
     method: 'PATCH',
   });
   if (!res.ok) throw new Error('Failed to update status');

@@ -16,7 +16,7 @@ export default function PatientDashboard({ patientId, onSuccess }) {
     const load = async () => {
       setLoading(true);
       try {
-        const [appointmentData, reportData, prescriptionData] = await Promise.all([
+        const [appointmentData, reportData, prescriptionData, doctorData] = await Promise.all([
           getPatientAppointments(patientId),
           getPatientReports(patientId).catch(() => []),
           getPatientPrescriptions(patientId).catch(() => []),
