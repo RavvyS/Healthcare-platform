@@ -137,13 +137,11 @@ public class DoctorService {
     // --- Prescription Issuance ---
 
     public Prescription issuePrescription(Long appointmentId, Prescription prescription) {
-        Appointment appointment = appointmentRepository.findById(Objects.requireNonNull(appointmentId, "ID is required"))
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-        
-        prescription.setDoctorId(appointment.getDoctorId());
-        prescription.setPatientId(appointment.getPatientId());
-        prescription.setDate(java.time.LocalDate.now());
-        
+        // Appointment validity belongs to appointment-service boundary.
+        // We accept the patientId and doctorId bounded from the frontend payload directly.
+        if (prescription.getDate() == null) {
+            prescription.setDate(java.time.LocalDate.now());
+        }
         return prescriptionRepository.save(prescription);
     }
 

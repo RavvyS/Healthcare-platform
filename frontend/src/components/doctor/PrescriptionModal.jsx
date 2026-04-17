@@ -13,7 +13,12 @@ export default function PrescriptionModal({ appointment, onClose, onSuccess }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await issuePrescription(appointment.id, { details, date });
+      await issuePrescription(appointment.id, { 
+        details, 
+        date,
+        patientId: appointment.patientId,
+        doctorId: appointment.doctorId
+      });
       onSuccess('Prescription issued successfully', 'success');
       onClose();
     } catch {
