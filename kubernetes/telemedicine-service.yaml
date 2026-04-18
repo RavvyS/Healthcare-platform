@@ -15,6 +15,7 @@ spec:
       containers:
         - name: telemedicine-service
           image: healthcare/telemedicine-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8085
           env:

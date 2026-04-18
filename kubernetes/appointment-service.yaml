@@ -15,6 +15,7 @@ spec:
       containers:
         - name: appointment-service
           image: healthcare/appointment-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8083
           env:

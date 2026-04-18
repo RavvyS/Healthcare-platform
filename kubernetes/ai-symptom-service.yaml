@@ -15,6 +15,7 @@ spec:
       containers:
         - name: ai-symptom-service
           image: healthcare/ai-symptom-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8087
 ---

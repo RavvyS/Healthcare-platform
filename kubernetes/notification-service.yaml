@@ -15,6 +15,7 @@ spec:
       containers:
         - name: notification-service
           image: healthcare/notification-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8088
           env:

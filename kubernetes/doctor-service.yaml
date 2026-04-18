@@ -15,6 +15,7 @@ spec:
       containers:
         - name: doctor-service
           image: healthcare/doctor-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8082
           env:

@@ -15,6 +15,7 @@ spec:
       containers:
         - name: patient-service
           image: healthcare/patient-service:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8086
           env:
