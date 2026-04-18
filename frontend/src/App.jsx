@@ -28,6 +28,7 @@ import Profile from './components/patient/Profile';
 import Reports from './components/patient/Reports';
 import AuthForms from './components/common/AuthForms';
 import HomePage from './components/common/HomePage';
+import ResetPassword from './components/common/ResetPassword';
 import { useToast } from './hooks/useToast';
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [theme, setTheme] = useState(() => localStorage.getItem('medicare_theme') || 'light');
   const [doctorProfile, setDoctorProfile] = useState(null);
+  const [isResetPath, setIsResetPath] = useState(() => window.location.pathname === '/reset-password');
 
   // Sync state to localStorage
   useEffect(() => {
@@ -98,6 +100,18 @@ function App() {
   }, [role, refreshTrigger]);
 
   const toggleTheme = () => setTheme((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'));
+
+  if (isResetPath) {
+    return (
+      <ResetPassword 
+        onBackToLogin={() => {
+          setIsResetPath(false);
+          setShowAuth(true);
+          window.history.replaceState({}, document.title, '/');
+        }} 
+      />
+    );
+  }
 
   if (!user || !role) {
     if (!showAuth) {
