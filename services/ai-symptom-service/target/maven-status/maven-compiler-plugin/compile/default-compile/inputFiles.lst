@@ -1,0 +1,6 @@
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/AiSymptomServiceApplication.java
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/config/SecurityConfig.java
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/controller/SymptomCheckController.java
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/dto/SymptomCheckRequest.java
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/dto/SymptomCheckResponse.java
+/Users/ravindusandun/Downloads/Ds-2/Healthcare-platform/services/ai-symptom-service/src/main/java/com/healthcare/aisymptomservice/service/SymptomAnalysisService.java
